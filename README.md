@@ -48,7 +48,7 @@ Here are some instances:
 
 You can see more information in `log.txt`
 
-You can download [here]([https://luogu.oss-cn-hangzhou.aliyuncs.com/upload/problem_attachment/5trp52p5.exe?response-content-disposition=attachment%3B%20filename%3D%22CompilerSelfExtracter.exe%22&OSSAccessKeyId=LTAI4FsiWjpNs1epYQp3d1Ag&Expires=1716517149&Signature=WfgQT6ageatujO9J3fhQ6HuLLPY%3D](https://luogu.oss-cn-hangzhou.aliyuncs.com/upload/problem_attachment/7dqumbsa.exe?response-content-disposition=attachment%3B%20filename%3D%22CompilerSelfExtracter.exe%22&OSSAccessKeyId=LTAI4FsiWjpNs1epYQp3d1Ag&Expires=1716517358&Signature=VSWxArlmzl5ucIxmbXbRnd5joLA%3D))
+You can download here： https://luogu.oss-cn-hangzhou.aliyuncs.com/upload/problem_attachment/7dqumbsa.exe?response-content-disposition=attachment%3B%20filename%3D%22CompilerSelfExtracter.exe%22&OSSAccessKeyId=LTAI4FsiWjpNs1epYQp3d1Ag&Expires=1716517910&Signature=X4DkbM9zbDdY%2FJN5Nf04xbKOr7M%3D
 
 It is a 7-Zip Self Extracter.
 
