@@ -52,7 +52,7 @@ Here are some instances:
 
 You can see more information in `log.txt`
 
-You can download executive files in `Releasescc`
+You can download executive files in `Releases`
 
 It is a 7-Zip Self Extracter.
 
