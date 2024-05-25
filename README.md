@@ -1,6 +1,6 @@
-# ScriptMaker
+# Compile Script Maker
 
-**A Compile Script Maker**
+**It is A Compile Script Maker**
 
 It can help you spawn compile script if you use `Mingw g++`
 
@@ -37,6 +37,10 @@ Here are some instances:
 **`3.  Compiler.exe -f TestFile.cpp -r resource.rc`**
 
 **`= windres resource.rc -O coff resource.o && g++ TestFile.cpp resource.o -o TestFile.exe`**
+
+```
+// Instance 4 means that you can use your own header files
+```
 
 **`4.  Compiler.exe -f TestFile.cpp -i Oxygen.cpp`**
 
