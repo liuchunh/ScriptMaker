@@ -2,6 +2,8 @@
 
 **It is A Compile Script Maker**
 
+**It is a Console Application, so you have to run cmd.exe or powershell.exe firstly!**
+
 It can help you spawn compile script if you use `Mingw g++`
 
 You have to configure `options.txt`
