@@ -28,14 +28,14 @@ string CppStandard = " -std=c++11";
 string Optimize, temp, OtherHeaderFile;
 string IfActiveEasyx, IfHideConsoleWindow;
 bool ActiveWindres = false;
-bool ActiveSg = false; // ÊÇ·ñ¿ªÆô -sg (-lsfml-graphics) ²ÎÊı
-bool ActiveSs = false; // ÊÇ·ñ¿ªÆô -ss (-lsfml-system) ²ÎÊı
-bool ActiveSw = false; // ÊÇ·ñ¿ªÆô -sw (-lsfml-window) ²ÎÊı
-bool ActiveSa = false; // ÊÇ·ñ¿ªÆô -sa (-lsfml-audio) ²ÎÊı
-bool ActiveSn = false; // ÊÇ·ñ¿ªÆô -sn (-lsfml-network) ²ÎÊı
+bool ActiveSg = false; // æ˜¯å¦å¼€å¯ -sg (-lsfml-graphics) å‚æ•°
+bool ActiveSs = false; // æ˜¯å¦å¼€å¯ -ss (-lsfml-system) å‚æ•°
+bool ActiveSw = false; // æ˜¯å¦å¼€å¯ -sw (-lsfml-window) å‚æ•°
+bool ActiveSa = false; // æ˜¯å¦å¼€å¯ -sa (-lsfml-audio) å‚æ•°
+bool ActiveSn = false; // æ˜¯å¦å¼€å¯ -sn (-lsfml-network) å‚æ•°
 bool AddedStd = false;
 
-// bool DirectlyExit = false; // Î´ÊäÈëÎÄ¼ş Ö±½ÓÍË³ö
+// bool DirectlyExit = false; // æœªè¾“å…¥æ–‡ä»¶ ç›´æ¥é€€å‡º
 bool ActiveS = false;
 bool IfPlaySound = false;
 bool NeedHelp = false;
@@ -50,16 +50,16 @@ using Oxygen::OutputTime;
 string GetOptionsFilePath();
 
 void PlaySound(){
-    // ²¥·ÅµÄÒôÆµÎÄ¼şÂ·¾¶
+    // æ’­æ”¾çš„éŸ³é¢‘æ–‡ä»¶è·¯å¾„
     // const char* audioFilePath = "C:\\Windows\\Media\\Windows Notify Messaging.wav";
 	const char* audioFilePath = "D:\\Code\\Windows Notify Messaging.wav";
 
-    // ´ò¿ª²¢²¥·ÅÒôÆµÎÄ¼ş
+    // æ‰“å¼€å¹¶æ’­æ”¾éŸ³é¢‘æ–‡ä»¶
     PlaySoundA(audioFilePath, NULL, SND_FILENAME | SND_ASYNC);
 
     Sleep(1.5 * 1000);
 
-    // Í£Ö¹ÒôÆµ²¥·Å
+    // åœæ­¢éŸ³é¢‘æ’­æ”¾
     PlaySoundA(NULL, NULL, 0);
 }
 
@@ -73,13 +73,13 @@ string GetPath(){
 }
 
 string GetOptionsFilePath() {
-    // »ñÈ¡µ±Ç°³ÌĞòËùÔÚÄ¿Â¼µÄ¾ø¶ÔÂ·¾¶
+    // è·å–å½“å‰ç¨‹åºæ‰€åœ¨ç›®å½•çš„ç»å¯¹è·¯å¾„
     char buffer[MAX_PATH];
     GetModuleFileName(NULL, buffer, MAX_PATH);
     PathRemoveFileSpec(buffer);
     string CurrentDir(buffer);
 
-    // Æ´½Óoptions.txtÎÄ¼şµÄÂ·¾¶
+    // æ‹¼æ¥options.txtæ–‡ä»¶çš„è·¯å¾„
     string OptionsFilePath = CurrentDir + "\\options.txt";
     return OptionsFilePath;
 }
@@ -130,10 +130,10 @@ void GetData(std::ifstream& ifs){
 }
 
 void GetWindresError(string input){
-    int store = 0; //  v.´¢´æ
+    int store = 0; //  v.å‚¨å­˜
 
     int Position = input.rfind(".exe");
-    // ÕªÈ¡´íÎóÈÕÖ¾
+    // æ‘˜å–é”™è¯¯æ—¥å¿—
     NeedHandle = input.substr(Position + 6);
     Position = NeedHandle.find(":");
     NeedHandle[Position] = ' ';
@@ -148,16 +148,16 @@ void GetWindresError(string input){
     }
     cout << "   Error Position: Line " << ErrorPosition << endl;
 
-    Position += 2; // ÒÆµ½±¨´íµÄµÚÒ»¸ö×Ö·û
+    Position += 2; // ç§»åˆ°æŠ¥é”™çš„ç¬¬ä¸€ä¸ªå­—ç¬¦
     ErrorLog += NeedHandle.substr(Position);
     cout << "   Problem: " << ErrorLog << endl;
-    ofs << "\n[", OutputTime(ofs), ofs << "] "; // ÕâÀï²¹ÁËÒ»¸ö»»ĞĞ
-    ofs << "'.rc' ÎÄ¼ş³öÏÖ´íÎó, ´íÎóÎÄ¼ş: " << ErrorFile << ", ´íÎó³öÏÖµÄĞĞÊı: " << ErrorPosition << ", ¾ßÌåµÄÎÊÌâ: " << ErrorLog; 
+    ofs << "\n[", OutputTime(ofs), ofs << "] "; // è¿™é‡Œè¡¥äº†ä¸€ä¸ªæ¢è¡Œ
+    ofs << "'.rc' æ–‡ä»¶å‡ºç°é”™è¯¯, é”™è¯¯æ–‡ä»¶: " << ErrorFile << ", é”™è¯¯å‡ºç°çš„è¡Œæ•°: " << ErrorPosition << ", å…·ä½“çš„é—®é¢˜: " << ErrorLog; 
 }
 
 void NoOptions(){
     ofs << "[", OutputTime(ofs), ofs << "] ";
-    ofs << "Î´ÊäÈëÎÄ¼ş, ³ÌĞòÖ±½ÓÍË³ö! " << std::endl;
+    ofs << "æœªè¾“å…¥æ–‡ä»¶, ç¨‹åºç›´æ¥é€€å‡º! " << std::endl;
     cout << "Empty File Path, COMPILER will exit directly!" << endl;
     ofs << "[", OutputTime(ofs), ofs << "] ";
     ofs << "--------------- Stoped! ---------------" << endl;
@@ -168,16 +168,17 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to make log!" << std::endl;
     }
 	ofs << "[", OutputTime(ofs), ofs << "] --------------- Launched ---------------" << std::endl;
-    ofs << "[", OutputTime(ofs), ofs << "] [Compiler] Version 1.1.4.6\n";
-	ofs << "[", OutputTime(ofs), ofs << "] ³ÌĞòÆô¶¯! ±àÒë¿ªÊ¼~" << std::endl;
+    ofs << "[", OutputTime(ofs), ofs << "] [Compiler] Version 1.1.4.8\n";
+	ofs << "[", OutputTime(ofs), ofs << "] ç¨‹åºå¯åŠ¨! ç¼–è¯‘å¼€å§‹~" << std::endl;
     string OptionsPath = GetOptionsFilePath();
-    string LogLocation = Oxygen::GetLocation() + "WindresLog.txt";
+    string LogLocation = Oxygen::GetLocation() + "\\WindresLog.txt";
     std::ifstream ReadWindresLog(LogLocation);
     std::ifstream ifs(OptionsPath);
-    std::cout << "[Compiler] Version 1.1.4.6\nAuthor: _Oxygen_ with Luogu UID 965233" << std::endl;
+    std::cout << "[Compiler] Version 1.1.4.8\nAuthor: _Oxygen_ with Luogu UID 965233" << std::endl;
     GetData(ifs);
     if (CompilerPath.empty()){
         std::cerr << "Wdf is that, bro~~~~ You forgettttt to configure the COMPILER TOOL!!!" << std::endl;
+        ofs << "["; OutputTime(ofs); ofs << "] --------------- Stoped! ---------------";
         return 0;
     }
     CompileLine += " ";
@@ -191,7 +192,7 @@ int main(int argc, char* argv[]) {
     // }
     if (argc == 1 && strcmp(argv[0], Path.c_str()) == 0){
         NoOptions();
-        return 0; // Ö±½Ó½áÊø³ÌĞò
+        return 0; // ç›´æ¥ç»“æŸç¨‹åº
     }
 
     if (argc == 1 && strcmp(argv[0], "Compiler.exe") == 0){
@@ -219,24 +220,26 @@ int main(int argc, char* argv[]) {
     }
 
     if (NeedHelp){
-        std::cout << "Õâ¸ö³ÌĞòÖ§³ÖµÄ²ÎÊıÓĞ: -f -s -o -i -w -n -l -h -c -a -r -e -d" << std::endl;
-        cout << "ÆäÖĞ -f ĞèÒª¼ÓcppÔ´ÎÄ¼ş, -s ĞèÒª¼ÓËùĞèÒªµÄc++±ê×¼(Ö»ĞèÒªÊäÈëÊı×Ö), -o ĞèÒªÌí¼ÓÓÅ»¯, Èço2 o3, Í¬ÑùÖ»ĞèÒª¼üÈëÊı×Ö\n";
-        cout << "-i ĞèÒª¼Ó×Ô¼º×Ô¶¨ÒåµÄ.cppÎÄ¼ş, ²¢ÇëÄãÌáÇ°ÅäÖÃºÃ, È·¶¨¿ÉÒÔÊ¹ÓÃ; -r ĞèÒª¼ÓĞèÒªµÄ .rc ÎÄ¼ş, Ëü»áµ÷ÓÃwindres±àÒë .rc ÎÄ¼şÈ»ºóÔÙ±àÒëÔ´´úÂë.\n";
-        cout << "ÄÇÃ´Ê£ÏÂµÄ¶¼²»ĞèÒª²ÎÊı, -w = -Wall, -l = -leasyx, -n = -lwinmm, -a = -lshlwapi, -h = -mwindows, -c = -fsyntax-only -e = -lole32 -d = -lgdi32\n";
-        cout << "ÆäÖĞ³ı -c Íâ¶¼ÊÇ±àÒë²ÎÊı, -c ÎªÖ»¼ì²âÓï·¨´íÎó\n";
-        cout << "ĞèÒª×¢ÒâµÄÊÇ, Èç¹ûÄãÒªÊ¹ÓÃ -l , ÇëÌáÇ°ÅäÖÃºÃ EasyX »·¾³\n";
+        std::cout << "è¿™ä¸ªç¨‹åºæ”¯æŒçš„å‚æ•°æœ‰: -f -s -o -i -w -n -l -h -c -a -r -e -d -u" << std::endl;
+        cout << "å…¶ä¸­ -f éœ€è¦åŠ cppæºæ–‡ä»¶, -s éœ€è¦åŠ æ‰€éœ€è¦çš„c++æ ‡å‡†(åªéœ€è¦è¾“å…¥æ•°å­—), -o éœ€è¦æ·»åŠ ä¼˜åŒ–, å¦‚o2 o3, åŒæ ·åªéœ€è¦é”®å…¥æ•°å­—\n";
+        cout << "-i éœ€è¦åŠ è‡ªå·±è‡ªå®šä¹‰çš„.cppæ–‡ä»¶, å¹¶è¯·ä½ æå‰é…ç½®å¥½, ç¡®å®šå¯ä»¥ä½¿ç”¨; -r éœ€è¦åŠ éœ€è¦çš„ .rc æ–‡ä»¶, å®ƒä¼šè°ƒç”¨windresç¼–è¯‘ .rc æ–‡ä»¶ç„¶åå†ç¼–è¯‘æºä»£ç .\n";
+        cout << "é‚£ä¹ˆå‰©ä¸‹çš„éƒ½ä¸éœ€è¦å‚æ•°, -w = -Wall, -l = -leasyx, -n = -lwinmm, -a = -lshlwapi, -h = -mwindows, -c = -fsyntax-only -e = -lole32 -d = -lgdi32 -u = -luuid\n";
+        cout << "å…¶ä¸­é™¤ -c å¤–éƒ½æ˜¯ç¼–è¯‘å‚æ•°, -c ä¸ºåªæ£€æµ‹è¯­æ³•é”™è¯¯\n";
+        cout << "éœ€è¦æ³¨æ„çš„æ˜¯, å¦‚æœä½ è¦ä½¿ç”¨ -l , è¯·æå‰é…ç½®å¥½ EasyX ç¯å¢ƒ\n";
+        ofs << "["; OutputTime(ofs); ofs << "] ä½¿ç”¨äº† '-help' å‚æ•°è·å–å¸®åŠ©" << std::endl;
+        ofs << "["; OutputTime(ofs); ofs << "] --------------- Stoped! ---------------";
         return 0;
     }
 
-    // Ñ­»·½âÎöÃüÁîĞĞ²ÎÊı
-    // Ğ´Ò»¸öÊÂ°¡ µ÷ÁËºÃ¾Ã ¾ÍÊÇÕâ¸ögetoptº¯ÊıÖĞ ×ÖÄ¸ºóÃæÈç¹ûÓĞ:µÄ»° ¾ÍÊÇÓĞ²ÎÊı Ã»ÓĞÃ°ºÅ¾ÍÊÇÃ»²ÎÊı
-    while ((option = getopt(argc, argv, "f:s:o:lhcr:nai:wed")) != -1) {
+    // å¾ªç¯è§£æå‘½ä»¤è¡Œå‚æ•°
+    // å†™ä¸€ä¸ªäº‹å•Š è°ƒäº†å¥½ä¹… å°±æ˜¯è¿™ä¸ªgetoptå‡½æ•°ä¸­ å­—æ¯åé¢å¦‚æœæœ‰:çš„è¯ å°±æ˜¯æœ‰å‚æ•° æ²¡æœ‰å†’å·å°±æ˜¯æ²¡å‚æ•°
+    while ((option = getopt(argc, argv, "f:s:o:lhcr:nai:wedu")) != -1) {
         switch (option) {
             case 'f':{
-                // ½«ÊäÈëµÄÎÄ¼şÃû Æ´³É±àÒë½Å±¾
+                // å°†è¾“å…¥çš„æ–‡ä»¶å æ‹¼æˆç¼–è¯‘è„šæœ¬
                 CompileFile = optarg;
                 if (CompileFile.find(".\\") != EOF){
-                    // ÓĞ'.\' 
+                    // æœ‰'.\' 
                     CompileFile = CompileFile.substr(2);
                 }
                 if (CompileFile.find(".cpp") == EOF){
@@ -247,12 +250,12 @@ int main(int argc, char* argv[]) {
                 temp = CompileFile.substr(0, CompileFile.rfind('.'));
                 CompileLine = CompilerPath + CompileLine + " -o " + temp + ".exe";
                 ofs << "[", OutputTime(ofs), ofs << "] ";
-				ofs << "±àÒëÎÄ¼ş: " << CompileFile;
+				ofs << "ç¼–è¯‘æ–‡ä»¶: " << CompileFile;
                 break;
             }
             case 's':{
                 ActiveS = true;
-                if (!ActiveSg && !ActiveSw && !ActiveSs && !ActiveSa && !ActiveSn) // Ã»ÓĞÒ»¸ö²ÎÊıÓë SFML ÓĞ¹Ø
+                if (!ActiveSg && !ActiveSw && !ActiveSs && !ActiveSa && !ActiveSn) // æ²¡æœ‰ä¸€ä¸ªå‚æ•°ä¸ SFML æœ‰å…³
                     CppStandard = optarg;
                 else 
                     CppStandard = "17";
@@ -260,7 +263,7 @@ int main(int argc, char* argv[]) {
                     CompileLine = CompileLine + " -std=c++" + CppStandard;
                     AddedStd = true;
                 }
-                ofs << " C++±ê×¼: c++" << CppStandard;
+                ofs << " C++æ ‡å‡†: c++" << CppStandard;
                 break;
             }
             case 'o':{
@@ -272,11 +275,11 @@ int main(int argc, char* argv[]) {
                 }
                 int pos = CompileLine.find(".cpp");
                 CompileLine = CompileLine.substr(0, pos + 1 + 3) + " -o" + Optimize + CompileLine.substr(pos + 4);
-                ofs << " ÓÅ»¯: o" << Optimize;
+                ofs << " ä¼˜åŒ–: o" << Optimize;
                 break;
             }
             case 'i':{
-            	// Èç¹ûÊ¹ÓÃÁË×Ô¼ºµÄÍ·ÎÄ¼şÄó 
+            	// å¦‚æœä½¿ç”¨äº†è‡ªå·±çš„å¤´æ–‡ä»¶æ 
             	OtherHeaderFile = optarg;
             	int pos = CompileLine.find(".cpp");
                 if (pos == EOF){
@@ -284,56 +287,61 @@ int main(int argc, char* argv[]) {
                     return 0;
                 }
                 CompileLine = CompileLine.substr(0, pos + 1 + 3) + " " + OtherHeaderFile + CompileLine.substr(pos + 4);
-				ofs << " Ê¹ÓÃµÄ×Ô¶¨ÒåcppÎÄ¼ş: " << OtherHeaderFile;
+				ofs << " ä½¿ç”¨çš„è‡ªå®šä¹‰cppæ–‡ä»¶: " << OtherHeaderFile;
                 break;
 			}
             case 'w':{
                 CompileLine += " -Wall";
-                ofs << " Ê¹ÓÃÁË '-Wall' ²ÎÊı";
+                ofs << " ä½¿ç”¨äº† '-Wall' å‚æ•°";
                 break;
             }
             case 'n':{
                 CompileLine += " -lwinmm";
-                ofs << " Ê¹ÓÃÁË '-lwinmm' ²ÎÊı";
+                ofs << " ä½¿ç”¨äº† '-lwinmm' å‚æ•°";
                 break;
             }
             case 'l':{
                 CompileLine += " -leasyx";
-                ofs << " Ê¹ÓÃÁË '-leasyx' ²ÎÊı";
+                ofs << " ä½¿ç”¨äº† '-leasyx' å‚æ•°";
                 break;
             }
             case 'h':{
                 CompileLine += " -mwindows";
-                ofs << " Ê¹ÓÃÁË '-mwindows' ²ÎÊı";
+                ofs << " ä½¿ç”¨äº† '-mwindows' å‚æ•°";
                 break;
             }
             case 'c':{
                 CompileLine += " -fsyntax-only";
-                ofs << " Ö»¼ì²âÓï·¨´íÎó";
+                ofs << " åªæ£€æµ‹è¯­æ³•é”™è¯¯";
                 break;
             }
             case 'a':{
                 CompileLine += " -lshlwapi";
-                ofs << " Ê¹ÓÃÁË '-lshlwapi' ²ÎÊı";
+                ofs << " ä½¿ç”¨äº† '-lshlwapi' å‚æ•°";
                 break;
             }
 			case 'e':{
 				CompileLine += " -lole32";
-				ofs << " Ê¹ÓÃÁË '-lole32' ²ÎÊı";
+				ofs << " ä½¿ç”¨äº† '-lole32' å‚æ•°";
 				break;
 			}
 			case 'd':{
 				CompileLine += " -lgdi32";
-				ofs << "Ê¹ÓÃÁË '-lgdi32' ²ÎÊı";
+				ofs << "ä½¿ç”¨äº† '-lgdi32' å‚æ•°";
 				break;
 			}
+            case 'u':{
+                CompileLine += " -luuid";
+				ofs << "ä½¿ç”¨äº† '-luuid' å‚æ•°";
+				break;
+            }
             case 'r':{
                 RCFile = optarg;
                 if (RCFile.find(".rc") == EOF){
                     Error();
                     return 0;
                 }
-                ActiveWindres = true; // ÆôÓÃWindres
+                ActiveWindres = true; // å¯ç”¨Windres
                 if (WindresPath.empty() || path.empty()){
                     path = CompilerPath.substr(0, CompilerPath.rfind('\\'));
                     WindresPath = path + "\\Windres.exe";
@@ -354,14 +362,14 @@ int main(int argc, char* argv[]) {
                 int divideplace = CompileLine.find(".cpp");
                 CompileLine = CompileLine.substr(0, divideplace + 3 + 1) + " " + RCFile + ".o" + CompileLine.substr(divideplace + 4);
                 // std::cout << "Compile Line: " << CompileLine << std::endl;
-                ofs << " Á´½ÓµÄ rc ÎÄ¼şÎª: " << RCFile << ".rc"; 
+                ofs << " é“¾æ¥çš„ rc æ–‡ä»¶ä¸º: " << RCFile << ".rc"; 
                 break;
             }
             default:{
                 PrintColor("red");
                 std::cerr << "Unknown Command!" << std::endl;
                 PrintColor("white");
-                std::cerr << "Usage: program_name [-f CompileFile] [-s CppStandard] [-o Optimize Level] [-r Resource File] [-w] [-l] [-h] [-c] [-w] [-a] [-e] [-d]" << std::endl;
+                std::cerr << "Usage: program_name [-f CompileFile] [-s CppStandard] [-o Optimize Level] [-r Resource File] [-w] [-l] [-h] [-c] [-w] [-a] [-e] [-d] [-u]" << std::endl;
                 std::cout << "There are four Examples:" << std::endl << "1.  Compiler.exe -f TestFile.cpp -s 14 -o 2 -l -h -w -a -n -e -d" << std::endl
                  << "=   g++ TestFile.cpp -o2 -o TestFile.exe -std=c++14 -leasyx -mwindows -Wall -lshlwapi -lwinmm -lole32 -lgdi32" << std::endl;
                 std::cout << "2.  Compiler.exe -f TestFile.cpp -c" << std::endl
@@ -377,7 +385,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // ÕâÊ± ±àÒë½Å±¾ÒÑ¾­Éú³ÉÍê³É ËùÒÔ¿ÉÒÔÖ±½Ó·­×ª
+    // è¿™æ—¶ ç¼–è¯‘è„šæœ¬å·²ç»ç”Ÿæˆå®Œæˆ æ‰€ä»¥å¯ä»¥ç›´æ¥ç¿»è½¬
     std::reverse(CppStandard.begin(), CppStandard.end());
 
     if (ActiveWindres && !WindresPath.empty()){
@@ -385,18 +393,18 @@ int main(int argc, char* argv[]) {
         system(WindresPath.c_str());
         std::cout << "Windres Path: " << WindresPath << std::endl;
         ofs << std::endl, ofs << "[", OutputTime(ofs), ofs << "]";
-        ofs << " rc ÎÄ¼ş µÄ±àÒë½Å±¾Îª: " << WindresPath; 
+        ofs << " rc æ–‡ä»¶ çš„ç¼–è¯‘è„šæœ¬ä¸º: " << WindresPath; 
 
-        // ¾Í¶ÁÒ»ĞĞ
+        // å°±è¯»ä¸€è¡Œ
         std::getline(ReadWindresLog, WindresLog);
         if (!WindresLog.empty()){
-            // ÓĞ±¨´í ËµÃ÷ÓĞÎÊÌâ
+            // æœ‰æŠ¥é”™ è¯´æ˜æœ‰é—®é¢˜
             cout << "Resource File Error: " << endl;
             GetWindresError(WindresLog);
         }
     }
 
-    // Ö´ĞĞ¶ÔÓ¦µÄ´úÂë
+    // æ‰§è¡Œå¯¹åº”çš„ä»£ç 
     std::cout << "Running with CompileFile: " << CompileFile << ", CppStandard: c++" << CppStandard[1] << CppStandard[0] << std::endl;
 
     if (ActiveSg)
@@ -417,8 +425,8 @@ int main(int argc, char* argv[]) {
     ofs << std::endl;
 
     ofs << "[", OutputTime(ofs), ofs << "] ";
-    ofs << "¿ªÊ¼±àÒë! ";
-    ofs << "±àÒë½Å±¾: " << CompileLine << std::endl;
+    ofs << "å¼€å§‹ç¼–è¯‘! ";
+    ofs << "ç¼–è¯‘è„šæœ¬: " << CompileLine << std::endl;
 
     double StartTime = clock();
     int result = system(CompileLine.c_str());
@@ -428,15 +436,15 @@ int main(int argc, char* argv[]) {
         std::cout << "Compile Successfully!" << std::endl;
         if (IfPlaySound)
             PlaySound();
-        ofs << "±àÒë½á¹û: ³É¹¦, ";
+        ofs << "ç¼–è¯‘ç»“æœ: æˆåŠŸ, ";
     }
     else{
         std::cout << "Compile Failed!" << std::endl;
-        ofs << "±àÒë½á¹û: Ê§°Ü, ";
+        ofs << "ç¼–è¯‘ç»“æœ: å¤±è´¥, ";
     }
     double EndTime = clock();
     std::cout << std::setprecision(4) << "Compile Time: " << (EndTime - StartTime) / 1000.0 << "s" << std::endl;
-    ofs << "±àÒëÊ±¼ä: " << std::setprecision(4) << (EndTime - StartTime) / 1000.0 << "s" << std::endl;
+    ofs << "ç¼–è¯‘æ—¶é—´: " << std::setprecision(4) << (EndTime - StartTime) / 1000.0 << "s" << std::endl;
     ofs << "[", OutputTime(ofs), ofs << "] --------------- Stoped! ---------------" << std::endl;
 	return 0;
 }
@@ -460,5 +468,5 @@ int main(int argc, char* argv[]) {
 ======`-.____`-.___\_____/___.-`____.-'======
                    `=---='
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ·ğ×æ±£ÓÓ       ÓÀ²»å´»ú     ÓÀÎŞBUG
+    ä½›ç¥–ä¿ä½‘       æ°¸ä¸å®•æœº     æ°¸æ— BUG
 */
