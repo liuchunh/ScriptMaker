@@ -1,5 +1,31 @@
 # Compile Script Maker
 
+### zh-cn
+
+这是一个可以生成编译脚本的程序
+
+是一个控制台程序，所以需要先运行 `cmd.exe` 或者 `powershell.exe` 再运行
+
+如果是 `Mingw g++` 编译器的话可以使用，`MSVC` 建议使用 `Visual Studio`
+
+必须要配置 `options.txt`！！！
+
+下面有 `options.txt` 的样例
+
+更多内容请输入 `Compiler.exe -help` 来查看
+
+日志会输出到 `log.txt` 中
+
+如果你不想编译的话 `Release` 中有编译好的，我将它打包成了 7z 的自解压程序
+
+两个额外的 dll 文件是我的编译器编译时链接的 必须要带
+
+~~说真的应该用在oi上好吧awa~~
+
+### en-us
+
+~~Translated by myself~~
+
 **It is A Compile Script Maker**
 
 **It is a Console Application, so you have to run cmd.exe or powershell.exe firstly!**
