@@ -42,6 +42,7 @@ For example:
 WindresPath=D:\\Mingw64\\bin\\Windres.exe
 CompilerPath=D:\\Mingw64\\bin\\g++.exe
 PlaySound=true
+AutoCurrectSyntax=true
 ```
 
 Replace the content behind `=` with your own path
