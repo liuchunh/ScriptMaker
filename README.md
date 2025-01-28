@@ -1,5 +1,7 @@
 # Compile Script Maker
 
+## Release Version 1.1.4.12
+
 ### zh-cn
 
 这是一个可以生成编译脚本的程序
@@ -85,7 +87,3 @@ You can download executive files in `Releases`
 It is a 7-Zip Self Extracter.
 
 Two extra dlls are necessities.
-
-`Sha1: d3d6fc617dd7ed536294786a6c4fbd319babe0bf` (x64)
-
-`Sha256: b77e2cfed680a930acbbc6fbcdf623085000b8481ae8a0a9d845e716d89f4db2` (x64)
