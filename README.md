@@ -20,8 +20,6 @@
 
 如果你不想编译的话 `Release` 中有编译好的，我将它打包成了 7z 的自解压程序
 
-两个额外的 dll 文件是我的编译器编译时链接的 必须要带
-
 ~~说真的应该用在oi上好吧awa~~
 
 ### en-us
@@ -86,5 +84,3 @@ You can see more information in `log.txt`
 You can download executive files in `Releases`
 
 It is a 7-Zip Self Extracter.
-
-Two extra dlls are necessities.
