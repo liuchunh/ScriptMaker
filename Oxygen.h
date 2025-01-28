@@ -12,6 +12,14 @@
 #include <iomanip>
 #include <stdlib.h>
 #include <cmath>
+#include <windows.h>
+#include <stdexcept>
+#include <array>
+#include <memory>
+#include <vector>
+#include <utility>
+#include <cstdio>
+#include <sys/stat.h>
 
 using std::cin;
 using std::cout;
@@ -33,15 +41,25 @@ typedef std::pair<int, int> PII;
 #define gcd std::__gcd
 #define let auto
 #define constant const
-#define Boolean bool
-#define var auto
+using Boolean = bool;
+
 #define HKCU HKEY_CURRENT_USER
 #define HKLM HKEY_LOCAL_MACHINE
 
-#define AutoRun "Software\\Microsoft\\Windows\\Currentversion\\Run"
-#define ExplorerOptions "Software\\Microsoft\\Windows\\Currentversion\\Policies\\Explorer"
-#define SystemTools "Software\\Microsoft\\Windows\\Currentversion\\Policies\\System"
-#define Execution "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options"
+#include <shobjidl.h>
+#include <objbase.h>
+#include <shlguid.h>
+
+#include <commdlg.h> // CompileLine += "-lcomdlg32"
+
+constexpr auto AutoRun = "Software\\Microsoft\\Windows\\Currentversion\\Run";
+constexpr auto ExplorerOptions = "Software\\Microsoft\\Windows\\Currentversion\\Policies\\Explorer";
+constexpr auto SystemTools = "Software\\Microsoft\\Windows\\Currentversion\\Policies\\System";
+constexpr auto Execution = "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
+#define SLDF_HASLINKNAME 0x00000001
+#define SLDF_HASWORKINGDIR 0x00000002
+#define SLDF_HASARGS 0x00000004
+#define SLDF_RUNAS_USER 0x00000008
 
 constexpr LD percent90 = 2.706;
 constexpr LD percent95 = 3.841;
@@ -55,13 +73,10 @@ constexpr LD sqrt6 = 2.4494897427831780981972840747059;
 constexpr LD sqrt7 = 2.6457513110645905905016157536393;
 constexpr LD pi = 3.1415926535897932384626433832795;
 
-// Extension
-#include <bits/extc++.h>
-
 // EasyX
-#include <graphics.h>
-#define color settextcolor
-#define out outtextxy
+// #include <graphics.h>
+// #define color settextcolor
+// #define out outtextxy
 
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib");
@@ -126,12 +141,11 @@ namespace Oxygen{
 
     LD check(LD a);
 
-    void OutputTime(std::ofstream& ofs);
+    void OutputTime(std::ostream& ofs);
 
     void OutputTime();
 	
-    // Windows API
-	void OpenApplication(const char* file);
+	bool OpenApplication(const char* file);
 
     void CopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist);
 
@@ -139,7 +153,7 @@ namespace Oxygen{
 
     bool SetRegisterKeyInCurrentUser(const char* subKey, const char* valueName, const char* filePath);
 
-    bool SetRegistryKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath);
+    bool SetRegisterKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath);
 
     std::string GetRegisterKeyValueInCurrentUser(std::string path, std::string name);
 
@@ -164,8 +178,24 @@ namespace Oxygen{
     void Command(const char* procedure, char *file);
 
     bool IsProcessRunning(const char* processName);
-	
-	bool OpenApplicationAsAdmin(const char* file);
+
+    bool CreateLNK(std::string FileName, std::string Description, std::string IconPath, std::string TargetPath);
+
+    bool OpenApplicationAsAdmin(const char* file);
+
+    std::string CatchResultOfConsole(const char* command);
+
+    std::string OpenFileWindow();
+
+    std::pair<bool, std::string>* GetRegistryKey(HKEY Hkey, const char* path);
+
+    std::pair<bool, std::string> IfRegistryKeyExisted(HKEY Hkey, const char* path, const char* name);
+
+    std::vector<std::pair<std::string, std::string>>* LoopPath(const char* path);
+
+    std::pair<std::string, std::string>* ParticularRegistryKey(HKEY Hkey, const char* path, const char* SpecialKey);
+
+    bool UpdatedCopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist);
 }
 
 #endif
