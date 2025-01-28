@@ -2,7 +2,7 @@
 
 namespace Oxygen{   
     /**
-     * @brief ¼ÆËã n µÄ½×³Ë
+     * @brief è®¡ç®— n çš„é˜¶ä¹˜
      * 
      * @param n 
      * @return Unsigned long long
@@ -16,13 +16,14 @@ namespace Oxygen{
     }
 
     /**
-     * @brief Éú³ÉÒ»¸ö´Ó start µ½ end µÄËæ»úÊı
+     * @brief ç”Ÿæˆä¸€ä¸ªä» start åˆ° end çš„éšæœºæ•°
      * 
      * @param start 
      * @param end 
      * @return int 
      */
     int random(int start, int end){
+        srand((unsigned int)time(NULL));
 		int num = rand()%(end - start + 1) + start;
 		return num;
 	}
@@ -68,7 +69,7 @@ namespace Oxygen{
         return a * b / gcd(a, b);
     }
 
-    // Á½¸ö²ÎÊı ·Ö±ğÊÇ·Ö×ÓºÍ·ÖÄ¸ ·µ»ØÒÀÈ»ÊÇÁ½¸öÊı
+    // ä¸¤ä¸ªå‚æ•° åˆ†åˆ«æ˜¯åˆ†å­å’Œåˆ†æ¯ è¿”å›ä¾ç„¶æ˜¯ä¸¤ä¸ªæ•°
     PII frac(int a, int b){
         int temp = gcd(a, b);
         a /= temp, b /= temp;
@@ -76,7 +77,7 @@ namespace Oxygen{
         return result;
     }
 	
-    // ÑÓÊ±Êä³ö 
+    // å»¶æ—¶è¾“å‡º 
 	void print(std::string out, int w_t){
 		int wait_time = w_t;
 		for (int i = 0;i < out.size();i ++){
@@ -87,8 +88,8 @@ namespace Oxygen{
 		}
 	}
 
-    // ³ıÁËÒ»Ğ©ÆÕÍ¨µÄÑÕÉ«Ö®Íâ \
-    »¹ÓĞ reseda Ç³ÂÌÉ« bluish Ç³À¶É« reddish Ç³ºìÉ« lavender µ­×ÏÉ« FaintYellow µ­»ÆÉ«
+    // é™¤äº†ä¸€äº›æ™®é€šçš„é¢œè‰²ä¹‹å¤– \
+    è¿˜æœ‰ reseda æµ…ç»¿è‰² bluish æµ…è“è‰² reddish æµ…çº¢è‰² lavender æ·¡ç´«è‰² FaintYellow æ·¡é»„è‰²
     void PrintColor(std::string type){
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);   
         int target = 0;
@@ -98,7 +99,7 @@ namespace Oxygen{
             target = 1;
         else if (type == "green")
             target = 2;
-        else if (type == "reseda") // Ç³ÂÌÉ«
+        else if (type == "reseda") // æµ…ç»¿è‰²
             target = 3;
         else if (type == "red")
             target = 4;
@@ -110,26 +111,26 @@ namespace Oxygen{
             target = 7;
         else if (type == "gray")
             target = 8;
-        else if (type == "bluish"){ // Ç³À¶É«
+        else if (type == "bluish"){ // æµ…è“è‰²
             target = 9;
         }
-        else if (type == "reddish"){ // Ç³ºìÉ«
+        else if (type == "reddish"){ // æµ…çº¢è‰²
             target = 12;
         }
-        else if (type == "lavender"){ // µ­×ÏÉ«
+        else if (type == "lavender"){ // æ·¡ç´«è‰²
             target = 13;
         }
-        else if (type == "FaintYellow"){ // µ­»ÆÉ«
+        else if (type == "FaintYellow"){ // æ·¡é»„è‰²
             target = 14;
         }
-        else{ // Î´ÖªÑÕÉ«È«²¿ÓÃÁÁ°×É«
+        else{ // æœªçŸ¥é¢œè‰²å…¨éƒ¨ç”¨äº®ç™½è‰²
             target = 15;
         }
         SetConsoleTextAttribute(hOut, target);
     } 
 	
     /**
-     * @brief ÅĞ¶ÏÒ»¸öÊıÊÇ·ñÎªÖÊÊı
+     * @brief åˆ¤æ–­ä¸€ä¸ªæ•°æ˜¯å¦ä¸ºè´¨æ•°
      * 
      * @param n 
      * @return true 
@@ -148,7 +149,7 @@ namespace Oxygen{
 	}
 
     /**
-     * @brief ¼ÆËã a µÄ b ´Î·½
+     * @brief è®¡ç®— a çš„ b æ¬¡æ–¹
      * 
      * @param a 
      * @param b 
@@ -172,7 +173,7 @@ namespace Oxygen{
 
     }
     
-    // Double ÀàĞÍµÄpowº¯Êı
+    // Double ç±»å‹çš„powå‡½æ•°
     LD Dpow(LD a, LD b){
         if (a == 0 && b == 0){
             throw std::runtime_error("Syntax Error!");
@@ -203,7 +204,7 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ´ò¿ª url(²ÎÊı) ¶ÔÓ¦µÄÍøÕ¾
+     * @brief æ‰“å¼€ url(å‚æ•°) å¯¹åº”çš„ç½‘ç«™
      * 
      * @param url 
      */
@@ -212,18 +213,18 @@ namespace Oxygen{
     }
 
     // void OpenProcedure(char* file){
-    //     // ¶¨Òå²¢³õÊ¼»¯ PROCESS_INFORMATION ºÍ STARTUPINFO ½á¹¹Ìå
+    //     // å®šä¹‰å¹¶åˆå§‹åŒ– PROCESS_INFORMATION å’Œ STARTUPINFO ç»“æ„ä½“
     //     PROCESS_INFORMATION pi;
     //     STARTUPINFO si;
     //     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     //     ZeroMemory(&si, sizeof(STARTUPINFO));
     //     si.cb = sizeof(STARTUPINFO);
 
-    //     // ¿ÉÖ´ĞĞÎÄ¼şµÄÂ·¾¶ºÍÃüÁîĞĞ²ÎÊı
+    //     // å¯æ‰§è¡Œæ–‡ä»¶çš„è·¯å¾„å’Œå‘½ä»¤è¡Œå‚æ•°
     //     LPCTSTR lpApplicationName = file;
     //     LPTSTR lpCommandLine = NULL;
 
-    //     // µ÷ÓÃ CreateProcess º¯Êı´´½¨ĞÂ½ø³Ì
+    //     // è°ƒç”¨ CreateProcess å‡½æ•°åˆ›å»ºæ–°è¿›ç¨‹
     //     BOOL bResult = CreateProcess(lpApplicationName, lpCommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 
     //     if (bResult == FALSE){
@@ -231,17 +232,17 @@ namespace Oxygen{
     //         return;
     //     }
 
-    //     // µÈ´ıĞÂ½ø³Ì½áÊø
+    //     // ç­‰å¾…æ–°è¿›ç¨‹ç»“æŸ
     //     // WaitForSingleObject(pi.hProcess, INFINITE);
 
-    //     // ¹Ø±Õ½ø³ÌºÍÏß³ÌµÄ¾ä±ú
+    //     // å…³é—­è¿›ç¨‹å’Œçº¿ç¨‹çš„å¥æŸ„
     //     CloseHandle(pi.hProcess);
     //     CloseHandle(pi.hThread);
 
     // }
 
     /**
-     * @brief ÓÃ notepad.exe ´ò¿ª file ËùÖ¸µÄÎÄ¼ş
+     * @brief ç”¨ notepad.exe æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
      * 
      * @param file 
      */
@@ -250,7 +251,7 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ÓÃ notepad.exe ´ò¿ª file ËùÖ¸µÄÎÄ¼ş
+     * @brief ç”¨ notepad.exe æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
      * 
      * @param file 
      */
@@ -274,29 +275,29 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ½« std::string ÀàĞÍµÄÊı¾İ×ª»»Îª char*
+     * @brief å°† std::string ç±»å‹çš„æ•°æ®è½¬æ¢ä¸º char*
      * 
      * @param str 
      * @return char* 
      */
     char* StringToChar(std::string str) {
-        // »ñÈ¡const char*ÀàĞÍµÄÊı¾İ
+        // è·å–const char*ç±»å‹çš„æ•°æ®
         const char* data = str.c_str();
 
-        // ¼ÆËãÊı¾İ³¤¶È²¢´´½¨ĞÂµÄchar*Êı×é
+        // è®¡ç®—æ•°æ®é•¿åº¦å¹¶åˆ›å»ºæ–°çš„char*æ•°ç»„
         size_t dataSize = std::strlen(data);
         char* newData = new char[dataSize + 1];
 
-        // ¸´ÖÆÊı¾İµ½ĞÂµÄÊı×éÖĞ
+        // å¤åˆ¶æ•°æ®åˆ°æ–°çš„æ•°ç»„ä¸­
         std::strcpy(newData, data);
 
-        // ·µ»ØĞÂµÄÊı×é
+        // è¿”å›æ–°çš„æ•°ç»„
         return newData;
     }
 
     LD check(LD a){
         if (a < percent90){
-            return -1; // ËµÃ÷Ã»ÓĞ¹ØÏµ
+            return -1; // è¯´æ˜æ²¡æœ‰å…³ç³»
         }
         else if (a > percent90 && a < percent95){
             return 90;
@@ -309,7 +310,7 @@ namespace Oxygen{
         }
         else if (a > percent999)
             return 99.9;
-        else return -1; // ²»¿ÉÄÜ´¥·¢µÄÄó Ö»ÊÇ·ÀÖ¹Warning
+        else return -1; // ä¸å¯èƒ½è§¦å‘çš„æ åªæ˜¯é˜²æ­¢Warning
     }
     
 	bool isdigit(char a){
@@ -346,15 +347,20 @@ namespace Oxygen{
     }
 
     /**
-     * @brief °Ñ´ËÊ±µÄÊ±¼äÊä³öµ½ ofs Ö¸¶¨µÄÎÄ¼şÖĞ
+     * @brief æŠŠæ­¤æ—¶çš„æ—¶é—´è¾“å‡ºåˆ° ofs æŒ‡å®šçš„æ–‡ä»¶ä¸­
      * 
      * @param ofs 
      */
-    void OutputTime(std::ofstream& ofs){
+    void OutputTime(std::ostream& ofs){
         std::time_t currentTime = std::time(nullptr);
         std::tm* localTime = std::localtime(&currentTime);
 
-        ofs << localTime -> tm_year + 1900 << "/" << localTime -> tm_mon + 1 << "/" << localTime -> tm_mday << " " << localTime -> tm_hour << ":";
+        std::string year = std::to_string(localTime -> tm_year + 1900);
+        std::string month = std::to_string(localTime -> tm_mon + 1);
+        std::string day = std::to_string(localTime -> tm_mday);
+        std::string hour = std::to_string(localTime -> tm_hour);
+
+        ofs << year << "/" << month << "/" << day << " " << hour << ":";
 
         int min = localTime -> tm_min;
         int sec = localTime -> tm_sec;
@@ -366,13 +372,13 @@ namespace Oxygen{
         if (sec < 10)
             second = "0";
 
-        minute += std::to_string(min), second += std::to_string(sec);
+        minute += std::to_string(min); second += std::to_string(sec);
 
         ofs << minute << ":" << second; 
     }
-
+        
     /**
-     * @brief °Ñµ±Ç°Ê±¼äÊä³öµ½¿ØÖÆÌ¨
+     * @brief æŠŠå½“å‰æ—¶é—´è¾“å‡ºåˆ°æ§åˆ¶å°
      * 
      */
     void OutputTime(){
@@ -397,29 +403,31 @@ namespace Oxygen{
     }
 	
     /**
-     * @brief ´ò¿ª file ËùÖ¸µÄÎÄ¼ş
+     * @brief æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
      * 
      * @param file 
+     * @return true
      */
-	void OpenApplication(const char* file){
+	bool OpenApplication(const char* file){
 		ShellExecute(NULL, "open", file, NULL, NULL, SW_SHOWNORMAL);
+        return true;
 	}
     
     /**
-     * @brief °Ñ FileOrigin ¿½±´µ½ FileDestination
+     * @brief æŠŠ FileOrigin æ‹·è´åˆ° FileDestination
      * 
-     * @param FileOrigin Òª¿½±´µÄÎÄ¼ş, ÒªÇóÊÇÂ·¾¶´øÎÄ¼şÃû
-     * @param FileDestination ¿½±´µÄÖÕµã, Í¬ÑùÊÇÂ·¾¶´øÎÄ¼şÃû
-     * @param IfCoveredWhenExist µ± IfCoveredWhenExist Îª True Ê±, ¼´ µ±Í¬ÃûÎÄ¼ş´æÔÚÊ±, ²»¸²¸Ç, ·´Ö®ÒàÈ»
+     * @param FileOrigin è¦æ‹·è´çš„æ–‡ä»¶, è¦æ±‚æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
+     * @param FileDestination æ‹·è´çš„ç»ˆç‚¹, åŒæ ·æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
+     * @param IfCoveredWhenExist å½“ IfCoveredWhenExist ä¸º True æ—¶, å³ å½“åŒåæ–‡ä»¶å­˜åœ¨æ—¶, ä¸è¦†ç›–, åä¹‹äº¦ç„¶
      */
     void CopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist){
         CopyFile(FileOrigin, FileDestination, IfCoveredWhenExist);
     }
 
     /**
-     * @brief ½áÊø ImageName ËùÖ¸µÄ½ø³Ì
+     * @brief ç»“æŸ ImageName æ‰€æŒ‡çš„è¿›ç¨‹
      * 
-     * @param ImageName Ó³ÏñÃû×Ö
+     * @param ImageName æ˜ åƒåå­—
      * @return true 
      * @return false 
      */
@@ -471,23 +479,23 @@ namespace Oxygen{
     bool SetRegisterKeyInCurrentUser(const char* subKey, const char* valueName, const char* filePath) {
         HKEY hKey;
         
-        // ´ò¿ª»ò´´½¨×¢²á±í×ÓÏî
+        // æ‰“å¼€æˆ–åˆ›å»ºæ³¨å†Œè¡¨å­é¡¹
         long result = RegCreateKeyExA(HKEY_CURRENT_USER, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
         if (result != ERROR_SUCCESS) {
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // Ğ´Èë¼üÖµÊı¾İ
+        // å†™å…¥é”®å€¼æ•°æ®
         result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
         if (result != ERROR_SUCCESS) {
             RegCloseKey(hKey);
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
         RegCloseKey(hKey);
 
-        return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
     }
 
     /**
@@ -499,33 +507,33 @@ namespace Oxygen{
      * @return true 
      * @return false 
      */
-    bool SetRegistryKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath) {
+    bool SetRegisterKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath) {
         HKEY hKey;
         
-        // ´ò¿ª»ò´´½¨×¢²á±í×ÓÏî
+        // æ‰“å¼€æˆ–åˆ›å»ºæ³¨å†Œè¡¨å­é¡¹
         long result = RegCreateKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
         if (result != ERROR_SUCCESS) {
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // Ğ´Èë¼üÖµÊı¾İ
+        // å†™å…¥é”®å€¼æ•°æ®
         result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
         if (result != ERROR_SUCCESS) {
             RegCloseKey(hKey);
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
         RegCloseKey(hKey);
 
-        return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
     }
     
     /**
-     * @brief »ñÈ¡ HKCU ÖĞµÄ×¢²á±í¼üÖµ
+     * @brief è·å– HKCU ä¸­çš„æ³¨å†Œè¡¨é”®å€¼
      * 
-     * @param path Òª»ñÈ¡µÄ×¢²á±í¼üÖµÂ·¾¶
-     * @param name Ãû×Ö
+     * @param path è¦è·å–çš„æ³¨å†Œè¡¨é”®å€¼è·¯å¾„
+     * @param name åå­—
      * @return value (std::string)
     */
     std::string GetRegisterKeyValueInCurrentUser(std::string path, std::string name) {
@@ -548,10 +556,10 @@ namespace Oxygen{
     }
 
     /**
-     * @brief »ñÈ¡ HKLM ÖĞµÄ×¢²á±í¼üÖµ
+     * @brief è·å– HKLM ä¸­çš„æ³¨å†Œè¡¨é”®å€¼
      * 
-     * @param path Òª»ñÈ¡µÄ×¢²á±í¼üÖµÂ·¾¶
-     * @param name Ãû×Ö
+     * @param path è¦è·å–çš„æ³¨å†Œè¡¨é”®å€¼è·¯å¾„
+     * @param name åå­—
      * @return value (std::string)
     */
     std::string GetRegisterKeyValueInLocalMachine(std::string path, std::string name) {
@@ -588,11 +596,11 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ½«×¢²á±í HKCU ÖĞ path Â·¾¶µÄÃûÎª name µÄ×¢²á±í¼üÖµ¸ÄÎª value
+     * @brief å°†æ³¨å†Œè¡¨ HKCU ä¸­ path è·¯å¾„çš„åä¸º name çš„æ³¨å†Œè¡¨é”®å€¼æ”¹ä¸º value
      * 
-     * @param path ÒªĞŞ¸ÄµÄ×¢²á±í¼üÖµµÄÂ·¾¶
-     * @param name Ãû×Ö
-     * @param value ĞŞ¸ÄºóµÄ¼üÖµ
+     * @param path è¦ä¿®æ”¹çš„æ³¨å†Œè¡¨é”®å€¼çš„è·¯å¾„
+     * @param name åå­—
+     * @param value ä¿®æ”¹åçš„é”®å€¼
      * @return true 
      * @return false 
      */
@@ -612,11 +620,11 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ½«×¢²á±í HKLM ÖĞ path Â·¾¶µÄÃûÎª name µÄ×¢²á±í¼üÖµ¸ÄÎª value
+     * @brief å°†æ³¨å†Œè¡¨ HKLM ä¸­ path è·¯å¾„çš„åä¸º name çš„æ³¨å†Œè¡¨é”®å€¼æ”¹ä¸º value
      * 
-     * @param path ÒªĞŞ¸ÄµÄ×¢²á±í¼üÖµµÄÂ·¾¶
-     * @param name Ãû×Ö
-     * @param value ĞŞ¸ÄºóµÄ¼üÖµ
+     * @param path è¦ä¿®æ”¹çš„æ³¨å†Œè¡¨é”®å€¼çš„è·¯å¾„
+     * @param name åå­—
+     * @param value ä¿®æ”¹åçš„é”®å€¼
      * @return true 
      * @return false 
      */
@@ -636,71 +644,71 @@ namespace Oxygen{
     }
 
     /**
-     * @brief É¾³ı HKCU ÖĞ subKey Â·¾¶ÏÂµÄ valueName
+     * @brief åˆ é™¤ HKCU ä¸­ subKey è·¯å¾„ä¸‹çš„ valueName
      * 
-     * @param subKey Â·¾¶
-     * @param valueName ×¢²á±íÏîµÄÃû×Ö
+     * @param subKey è·¯å¾„
+     * @param valueName æ³¨å†Œè¡¨é¡¹çš„åå­—
      * @return true 
      * @return false 
      */
     bool DeleteRegistryKeyInCurrentUser(const char* subKey, const char* valueName) {
         HKEY hKey;
         
-        // ´ò¿ª×¢²á±í×ÓÏî
+        // æ‰“å¼€æ³¨å†Œè¡¨å­é¡¹
         long result = RegOpenKeyExA(HKEY_CURRENT_USER, subKey, 0, KEY_WRITE, &hKey);
         if (result != ERROR_SUCCESS) {
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // É¾³ı¼üÖµÊı¾İ
+        // åˆ é™¤é”®å€¼æ•°æ®
         result = RegDeleteValueA(hKey, valueName);
         if (result != ERROR_SUCCESS) {
             RegCloseKey(hKey);
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
         RegCloseKey(hKey);
 
-        return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
     }
 
     /**
-     * @brief É¾³ı HKLM ÖĞ subKey Â·¾¶ÏÂµÄ valueName
+     * @brief åˆ é™¤ HKLM ä¸­ subKey è·¯å¾„ä¸‹çš„ valueName
      * 
-     * @param subKey Â·¾¶
-     * @param valueName ×¢²á±íÏîµÄÃû×Ö
+     * @param subKey è·¯å¾„
+     * @param valueName æ³¨å†Œè¡¨é¡¹çš„åå­—
      * @return true 
      * @return false 
      */
     bool DeleteRegistryKeyInLocalMachine(const char* subKey, const char* valueName) {
         HKEY hKey;
         
-        // ´ò¿ª×¢²á±í×ÓÏî
+        // æ‰“å¼€æ³¨å†Œè¡¨å­é¡¹
         long result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, KEY_WRITE, &hKey);
         if (result != ERROR_SUCCESS) {
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // É¾³ı¼üÖµÊı¾İ
+        // åˆ é™¤é”®å€¼æ•°æ®
         result = RegDeleteValueA(hKey, valueName);
         if (result != ERROR_SUCCESS) {
             RegCloseKey(hKey);
-            return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
         }
 
-        // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
         RegCloseKey(hKey);
 
-        return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
     }
 
     /**
-     * @brief Ìí¼Ó×ÔÆôÏî, path ½öÏŞ HKCU ºÍ HKLM
+     * @brief æ·»åŠ è‡ªå¯é¡¹, path ä»…é™ HKCU å’Œ HKLM
      * 
-     * @param path ÏŞÖÆÎª HKCU ºÍ HKLM, ·Ö±ğÔÚ HKCU ºÍ HKLM Ìí¼Ó¼üÖµ
-     * @param name ×ÔÆôÏîµÄÃû×Ö
-     * @param value ×ÔÆôÏîµÄ¼üÖµ
+     * @param path é™åˆ¶ä¸º HKCU å’Œ HKLM, åˆ†åˆ«åœ¨ HKCU å’Œ HKLM æ·»åŠ é”®å€¼
+     * @param name è‡ªå¯é¡¹çš„åå­—
+     * @param value è‡ªå¯é¡¹çš„é”®å€¼
      * @return true 
      * @return false 
      */
@@ -710,17 +718,17 @@ namespace Oxygen{
             result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), value.c_str());
         }
         else if (path == "HKLM" || path == "HKEY_LOCAL_MACHINE"){
-            result = SetRegistryKeyInLocalMachine(AutoRun, name.c_str(), value.c_str());
+            result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), value.c_str());
         }
 
         return result;
     }
 
     /**
-     * @brief Ìí¼Ó Explorer.exe µÄÏŞÖÆÏî Ä¬ÈÏ¼üÖµÎª 1
+     * @brief æ·»åŠ  Explorer.exe çš„é™åˆ¶é¡¹ é»˜è®¤é”®å€¼ä¸º 1
      * 
-     * @param path ÏŞÖÆÎª HKCU ºÍ HKLM, ·Ö±ğÔÚ HKCU ºÍ HKLM Ìí¼Ó¼üÖµ
-     * @param name ÏŞÖÆÏîµÄÃû×Ö
+     * @param path é™åˆ¶ä¸º HKCU å’Œ HKLM, åˆ†åˆ«åœ¨ HKCU å’Œ HKLM æ·»åŠ é”®å€¼
+     * @param name é™åˆ¶é¡¹çš„åå­—
      * @return true 
      * @return false 
      */
@@ -730,15 +738,15 @@ namespace Oxygen{
             result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), "1");
         }
         else if (path == "HKLM" || path == "HKEY_LOCAL_MACHINE"){
-            result = SetRegistryKeyInLocalMachine(AutoRun, name.c_str(), "1");
+            result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), "1");
         }
         return result;
     }
 
     /**
-     * @brief É¾³ıÖ¸¶¨µÄÎÄ¼ş
+     * @brief åˆ é™¤æŒ‡å®šçš„æ–‡ä»¶
      * 
-     * @param file Ö¸¶¨µÄÎÄ¼ş
+     * @param file æŒ‡å®šçš„æ–‡ä»¶
      * @return true
      * @return false
      */
@@ -751,9 +759,9 @@ namespace Oxygen{
         }
     }
     /**
-     * @brief ±íÊ¾¶Ô procedure ³ÌĞòÖ´ĞĞ file ÃüÁîĞĞ,
+     * @brief è¡¨ç¤ºå¯¹ procedure ç¨‹åºæ‰§è¡Œ file å‘½ä»¤è¡Œ,
      * 
-     * Eg. ±ÈÈçËµÎÒÏë¶Ô D:\\Compiler.exe Ö´ĞĞ "-f Tester.cpp", ÄÇÃ´¾Í¿ÉÒÔµ÷ÓÃ Command("D:\\Compiler.exe", " -f Tester.cpp");
+     * Eg. æ¯”å¦‚è¯´æˆ‘æƒ³å¯¹ D:\\Compiler.exe æ‰§è¡Œ "-f Tester.cpp", é‚£ä¹ˆå°±å¯ä»¥è°ƒç”¨ Command("D:\\Compiler.exe", " -f Tester.cpp");
      * 
      * @param procedure 
      * @param file 
@@ -774,9 +782,9 @@ namespace Oxygen{
     }
 
     /**
-     * @brief ¼ì²â½ø³ÌÊÇ·ñ´æÔÚ
+     * @brief æ£€æµ‹è¿›ç¨‹æ˜¯å¦å­˜åœ¨
      * 
-     * @param processName Ó³ÏñÃû×Ö
+     * @param processName æ˜ åƒåå­—
      * @return true 
      * @return false 
      */
@@ -806,19 +814,315 @@ namespace Oxygen{
         CloseHandle(hProcessSnap);
         return false;
     }
-	
-	bool OpenApplicationAsAdmin(const char* file) {
-		SHELLEXECUTEINFO shExecInfo = {0};
-		shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-		shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-		shExecInfo.hwnd = NULL;
-		shExecInfo.lpVerb = "runas"; // This is what makes it run as admin
-		shExecInfo.lpFile = file;
-		shExecInfo.lpParameters = NULL;
-		shExecInfo.lpDirectory = NULL;
-		shExecInfo.nShow = SW_NORMAL;
-		shExecInfo.hInstApp = NULL;
 
-		return ShellExecuteEx(&shExecInfo);
-	}
+    /**
+     * @brief åˆ›å»ºä¸€ä¸ªåä¸º FileName çš„å¿«æ·æ–¹å¼
+     * 
+     * @param FileName 
+     * @param Description 
+     * @param IconPath 
+     * @param TargetPath 
+     * @return true 
+     * @return false 
+     */
+    bool CreateLNK(std::string FileName, std::string Description, std::string IconPath, std::string TargetPath) {
+        CoInitialize(NULL);
+
+        IShellLink* pShellLink;
+        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pShellLink);
+        if (SUCCEEDED(hres)) {
+            pShellLink->SetPath(TargetPath.c_str());
+            pShellLink->SetDescription(Description.c_str());
+            pShellLink->SetIconLocation(IconPath.c_str(), 0);
+
+            IPersistFile* pPersistFile;
+            hres = pShellLink->QueryInterface(IID_IPersistFile, (LPVOID*)&pPersistFile);
+            if (SUCCEEDED(hres)) {
+                std::wstring wsz = std::wstring(FileName.begin(), FileName.end());
+                hres = pPersistFile->Save(wsz.c_str(), TRUE);
+                pPersistFile->Release();
+            }
+
+            pShellLink->Release();
+        }
+
+        CoUninitialize();
+
+        return SUCCEEDED(hres);
+    }
+
+    /**
+     * @brief Open An Application with Admin Privileges.
+     * 
+     * @param file 
+     * @return true
+     * @return false
+     */
+    bool OpenApplicationAsAdmin(const char* file) {
+        SHELLEXECUTEINFO shExecInfo = {0};
+        shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+        shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+        shExecInfo.hwnd = NULL;
+        shExecInfo.lpVerb = "runas"; // This is what makes it run as admin
+        shExecInfo.lpFile = file;
+        shExecInfo.lpParameters = NULL;
+        shExecInfo.lpDirectory = NULL;
+        shExecInfo.nShow = SW_NORMAL;
+        shExecInfo.hInstApp = NULL;
+
+        return ShellExecuteEx(&shExecInfo);
+    }
+
+    /**
+     * @brief Catch Output of a Console Application
+     * 
+     * @param command You can input the name of application.
+     * @return std::string 
+     */
+    std::string CatchResultOfConsole(const char* command) {
+        std::array<char, 128> buffer;
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command, "r"), pclose);
+        if (!pipe) {
+            throw std::runtime_error("popen() failed!");
+        }
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result;
+    }
+    
+    /**
+     * @brief Open "Open File" Window
+     * 
+     * @return std::string
+     */
+    std::string OpenFileWindow(){
+        OPENFILENAME ofn;       // ç»“æ„ä½“ç”¨äºä¿å­˜æ–‡ä»¶å¯¹è¯æ¡†çš„ä¿¡æ¯
+        char szFile[260];       // ç”¨äºä¿å­˜é€‰æ‹©çš„æ–‡ä»¶è·¯å¾„
+
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.lpstrFile = szFile;
+        ofn.lpstrFile[0] = '\0';
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = "All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+        // æ‰“å¼€æ–‡ä»¶å¯¹è¯æ¡†
+        GetOpenFileName(&ofn);
+
+        std::string OpenFile(szFile);
+
+        return OpenFile;
+    }
+
+    /**
+     * @brief è¯¥å‡½æ•°ä¸ºè¯»å– Hkey\path ä¸‹çš„æ‰€æœ‰é”®å€¼
+     * 
+     * @param Hkey 
+     * @param path
+     * @example 
+     *  auto* registryValues = GetRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+        if (registryValues->first) {
+            std::cout << "Registry values:\n" << registryValues->second << std::endl;
+        }
+        delete registryValues;
+     * @return std::pair<bool, std::string>* å…¶ä¸­ bool ä¸ºè·å–æ˜¯å¦æˆåŠŸ std::string ä¸ºé”®å€¼ å¦‚æœå¤±è´¥åˆ™ä¸ºç©º
+     */
+    std::pair<bool, std::string>* GetRegistryKey(HKEY Hkey, const char* path) {
+        HKEY hKey;
+        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+        if (lResult != ERROR_SUCCESS) {
+            return new std::pair<bool, std::string>(false, "");
+        }
+
+        std::string allValues;
+        DWORD index = 0;
+        char valueName[256];
+        DWORD valueNameSize = sizeof(valueName);
+        BYTE data[1024];
+        DWORD dataSize = sizeof(data);
+        DWORD type;
+
+        while (RegEnumValue(hKey, index, valueName, &valueNameSize, NULL, &type, data, &dataSize) == ERROR_SUCCESS) {
+            if (type == REG_SZ) {
+                allValues += std::string(valueName) + "=" + std::string(reinterpret_cast<char*>(data)) + "\n";
+            }
+            index++;
+            valueNameSize = sizeof(valueName);
+            dataSize = sizeof(data);
+        }
+
+        RegCloseKey(hKey);
+        return new std::pair<bool, std::string>(true, allValues);
+    }
+    /**
+     * @brief è¯¥å‡½æ•°ä¸ºè¯»å– Hkey\path ä¸‹çš„ name é¡¹ 
+     * 
+     * @param Hkey 
+     * @param path 
+     * @param name 
+     * @example
+     *  auto registryExisted = IfRegistryKeyExisted(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
+        if (registryExisted.first) {
+            std::cout << "Registry value: " << registryExisted.second << std::endl;
+        }
+     * @return std::pair<bool, std::string> å…¶ä¸­ bool ä¸ºè·å–çš„æˆåŠŸæˆ–å¤±è´¥, std::string ä¸ºé”®å€¼ å¦‚æœè·å–å¤±è´¥åˆ™ä¸ºç©º
+     */
+    std::pair<bool, std::string> IfRegistryKeyExisted(HKEY Hkey, const char* path, const char* name) {
+        HKEY hKey;
+        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+        if (lResult != ERROR_SUCCESS) {
+            return std::make_pair(false, "");
+        }
+
+        BYTE data[1024];
+        DWORD dataSize = sizeof(data);
+        DWORD type;
+        lResult = RegQueryValueEx(hKey, name, NULL, &type, data, &dataSize);
+        if (lResult != ERROR_SUCCESS) {
+            RegCloseKey(hKey);
+            return std::make_pair(false, "");
+        }
+
+        std::string value = std::string(reinterpret_cast<char*>(data));
+        RegCloseKey(hKey);
+        return std::make_pair(true, value);
+    }
+
+    /**
+     * @brief è¯¥å‡½æ•°ä¸º è¯»å–pathä¸‹çš„æ‰€æœ‰æ–‡ä»¶
+     * 
+     * @param path 
+     * @example
+     *  auto* fileList = LoopPath("C:\\Windows");
+        if (fileList) {
+            for (const auto& file : *fileList) {
+                std::cout << "File: " << file.first << ", Type: " << file.second << std::endl;
+            }
+            delete fileList;
+        }
+     * @return std::vector<std::pair<std::string, std::string>>* å…¶ä¸­ ç¬¬ä¸€ä¸ª std::string ä¸ºæ–‡ä»¶å, ç¬¬äºŒä¸ª std::string ä¸ºæ–‡ä»¶ç±»å‹
+     */
+    std::vector<std::pair<std::string, std::string>>* LoopPath(const char* path) {
+        std::string searchPath = std::string(path) + "\\*";
+        WIN32_FIND_DATAA findData;
+        HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+
+        if (hFind == INVALID_HANDLE_VALUE) {
+            return nullptr;
+        }
+
+        auto* result = new std::vector<std::pair<std::string, std::string>>();
+        do {
+            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                result->emplace_back(findData.cFileName, "Directory");
+            } else {
+                std::string fileName = findData.cFileName;
+                size_t dotPos = fileName.rfind('.');
+                std::string fileType = (dotPos != std::string::npos) ? fileName.substr(dotPos + 1) : "";
+                result->emplace_back(fileName, fileType);
+            }
+        } while (FindNextFileA(hFind, &findData) != 0);
+
+        FindClose(hFind);
+        return result;
+    }
+
+    /**
+     * @brief è¯¥å‡½æ•°ä¸º è¯»å– Hkey\path ä¸‹çš„æ‰€æœ‰é¡¹ æ˜¯å¦å­˜åœ¨ SpecialKey è¿™ä¸€é¡¹
+     * 
+     * @param Hkey 
+     * @param path 
+     * @param SpecialKey 
+     * @example
+     *  auto* particularKey = ParticularRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
+        if (!particularKey->first.empty()) {
+            std::cout << "Registry path: " << particularKey->first << ", Value: " << particularKey->second << std::endl;
+        }
+        delete particularKey;
+     * @return std::pair<std::string, std::string>* ç¬¬ä¸€ä¸ª std::string è¿”å›æ³¨å†Œè¡¨ç›®å½•, ç¬¬äºŒä¸ª std::string ä¸ºé”®å€¼
+     */
+    std::pair<std::string, std::string>* ParticularRegistryKey(HKEY Hkey, const char* path, const char* SpecialKey) {
+        HKEY hKey;
+        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+        if (lResult != ERROR_SUCCESS) {
+            return new std::pair<std::string, std::string>("", "");
+        }
+
+        BYTE data[1024];
+        DWORD dataSize = sizeof(data);
+        DWORD type;
+        lResult = RegQueryValueEx(hKey, SpecialKey, NULL, &type, data, &dataSize);
+        if (lResult != ERROR_SUCCESS) {
+            RegCloseKey(hKey);
+            return new std::pair<std::string, std::string>("", "");
+        }
+
+        std::string value = std::string(reinterpret_cast<char*>(data));
+        RegCloseKey(hKey);
+        return new std::pair<std::string, std::string>(std::string(path), value);
+    }
+
+    /**
+     * @brief æŠŠ FileOrigin æ‹·è´åˆ° FileDestination
+     * 
+     * @param FileOrigin è¦æ‹·è´çš„æ–‡ä»¶, è¦æ±‚æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
+     * @param FileDestination æ‹·è´çš„ç»ˆç‚¹, åŒæ ·æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
+     * @param IfCoveredWhenExist å½“ IfCoveredWhenExist ä¸º false æ—¶, å³ å½“åŒåæ–‡ä»¶å­˜åœ¨æ—¶, ä¸è¦†ç›–, åä¹‹äº¦ç„¶
+     * @return bool æ‹·è´æˆåŠŸè¿”å› trueï¼Œå¤±è´¥è¿”å› false
+     */
+    bool UpdatedCopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist) {
+        // æ£€æŸ¥æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
+        struct stat buffer;
+        if (stat(FileOrigin, &buffer) != 0) {
+            std::cerr << "æºæ–‡ä»¶ " << FileOrigin << " ä¸å­˜åœ¨ã€‚" << std::endl;
+            return false;
+        }
+
+        // æ£€æŸ¥ç›®æ ‡æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+        if (stat(FileDestination, &buffer) == 0 && !IfCoveredWhenExist) {
+            std::cerr << "ç›®æ ‡æ–‡ä»¶ " << FileDestination << " å·²å­˜åœ¨ï¼Œä¸”ä¸å…è®¸è¦†ç›–ã€‚" << std::endl;
+            return false;
+        }
+
+        // æ‰“å¼€æºæ–‡ä»¶
+        FILE* sourceFile = fopen(FileOrigin, "rb");
+        if (sourceFile == nullptr) {
+            std::cerr << "æ— æ³•æ‰“å¼€æºæ–‡ä»¶ " << FileOrigin << std::endl;
+            return false;
+        }
+
+        // æ‰“å¼€ç›®æ ‡æ–‡ä»¶
+        FILE* destFile = fopen(FileDestination, "wb");
+        if (destFile == nullptr) {
+            std::cerr << "æ— æ³•æ‰“å¼€ç›®æ ‡æ–‡ä»¶ " << FileDestination << std::endl;
+            fclose(sourceFile);
+            return false;
+        }
+
+        // ç¼“å†²åŒºå¤§å°
+        const size_t bufferSize = 4096;
+        char bufferData[bufferSize];
+        size_t bytesRead;
+
+        // é€å—å¤åˆ¶æ–‡ä»¶å†…å®¹
+        while ((bytesRead = fread(bufferData, 1, bufferSize, sourceFile)) > 0) {
+            if (fwrite(bufferData, 1, bytesRead, destFile) != bytesRead) {
+                std::cerr << "å†™å…¥ç›®æ ‡æ–‡ä»¶æ—¶å‡ºé”™ã€‚" << std::endl;
+                fclose(sourceFile);
+                fclose(destFile);
+                return false;
+            }
+        }
+
+        // å…³é—­æ–‡ä»¶
+        fclose(sourceFile);
+        fclose(destFile);
+
+        std::cout << "æ–‡ä»¶å¤åˆ¶æˆåŠŸï¼Œä» " << FileOrigin << " åˆ° " << FileDestination << std::endl;
+        return true;
+    }
 }
