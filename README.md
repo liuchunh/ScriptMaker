@@ -1,6 +1,6 @@
 # Compile Script Maker
 
-## Release Version 1.1.4.12
+## Release Version 1.2
 
 ### zh-cn
 
@@ -14,7 +14,7 @@
 
 下面有 `options.txt` 的样例
 
-更多内容请输入 `Compiler.exe -help` 来查看
+更多内容请输入 `Compiler.exe -h` 来查看
 
 日志会输出到 `log.txt` 中
 
@@ -39,8 +39,9 @@ For example:
 ```
 WindresPath=D:\\Mingw64\\bin\\Windres.exe
 CompilerPath=D:\\Mingw64\\bin\\g++.exe
-PlaySound=true
+RunSound=true
 AutoCurrectSyntax=true
+MediaPath=%Your Voice File Path%
 ```
 
 Replace the content behind `=` with your own path
@@ -75,7 +76,7 @@ Here are some instances:
 
 **`= g++ TestFile.cpp Oxygen.cpp -o TestFile.exe`**
 
-**`5. Compiler.exe -help`**
+**`5. Compiler.exe -h`**
 
 ------------
 
