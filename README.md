@@ -1,6 +1,6 @@
 # Compile Script Maker
 
-## Release Version 1.2
+## Release Version 1.2.1
 
 ### zh-cn
 
@@ -37,11 +37,11 @@ You have to configure `options.txt`
 For example:
 
 ```
-WindresPath=D:\\Mingw64\\bin\\Windres.exe
-CompilerPath=D:\\Mingw64\\bin\\g++.exe
-RunSound=true
-AutoCurrectSyntax=true
-MediaPath=%Your Voice File Path%
+WindresPath=D:\\Mingw64\\bin\\Windres.exe # % Your Windres Path Here %
+CompilerPath=D:\\Mingw64\\bin\\g++.exe # % Your g++ Compiler Path Here %
+RunSound=true # true or false
+AutoCurrectSyntax=true # true or false
+MediaPath=% Your Voice File Path %
 ```
 
 Replace the content behind `=` with your own path
