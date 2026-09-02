@@ -1,75 +1,1115 @@
 #include "Oxygen.h"
 
-namespace Oxygen{   
+namespace ConsoleColor{
     /**
-     * @brief è®¡ç®— n çš„é˜¶ä¹˜
+     * @brief Set the Color object
      * 
-     * @param n 
-     * @return Unsigned long long
+     * @param textColor ÎÄ±¾ÑÕÉ«
+     * @param backgroundColor ±³¾°ÑÕÉ«
      */
-    ULL fact(int n){
-        if (n == 1)
-            return 1;
-        if (n == 0)
-            return 0;
-        return fact(n - 1) * n;
+    void SetColor(Color textColor, Color backgroundColor){
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(hConsole, (backgroundColor << 4) | textColor);
     }
+}
 
-    /**
-     * @brief ç”Ÿæˆä¸€ä¸ªä» start åˆ° end çš„éšæœºæ•°
-     * 
-     * @param start 
-     * @param end 
-     * @return int 
-     */
-    int random(int start, int end){
-        srand((unsigned int)time(NULL));
-		int num = rand()%(end - start + 1) + start;
-		return num;
-	}
-
-    ULL C(ULL a, ULL b){
-        ULL ans = 1;
-        if (a == b)
-            return fact(a);
-        if ((b - a) > a){
-            for (int i = b - a + 1; i <= b; i ++)
-                ans *= i;
-                return ans / fact(a);
+namespace Oxygen{
+    namespace File{
+        /**
+         * @brief °Ñ FileOrigin ¿½±´µ½ FileDestination
+         * 
+         * @param FileOrigin Òª¿½±´µÄÎÄ¼ş, ÒªÇóÊÇÂ·¾¶´øÎÄ¼şÃû
+         * @param FileDestination ¿½±´µÄÖÕµã, Í¬ÑùÊÇÂ·¾¶´øÎÄ¼şÃû
+         * @param IfCoveredWhenExist µ± IfCoveredWhenExist Îª True Ê±, ¼´ µ±Í¬ÃûÎÄ¼ş´æÔÚÊ±, ²»¸²¸Ç, ·´Ö®ÒàÈ»
+         */
+        void CopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist){
+            CopyFile(FileOrigin, FileDestination, IfCoveredWhenExist);
         }
-        else if (b - a == a){
-            int lower = 1, upper = 1;
-            for (int i = 1; i <= a; i ++)
-                lower *= i;
 
-            for (int i = a + 1; i <= b; i ++)
-                upper *= i;
-            return upper / lower;
+        /**
+         * @brief Get Location of procedure / »ñÈ¡³ÌĞòËùÔÚµÄÏà¶ÔÂ·¾¶
+         * 
+         * @return Location (std::string)
+        */
+        std::string GetLocation(){
+            char buffer[MAX_PATH];
+            GetModuleFileName(NULL, buffer, MAX_PATH);
+            PathRemoveFileSpec(buffer);
+            std::string CurrentDir(buffer);
+
+            return CurrentDir;
         }
-        else{
-            for (int i = a + 1; i <= b; i ++){
-                ans *= i;
-                return ans / fact(b - a);
+
+        /**
+         * @brief É¾³ıÖ¸¶¨µÄÎÄ¼ş
+         * 
+         * @param file Ö¸¶¨µÄÎÄ¼ş
+         * @return true
+         * @return false
+         */
+        bool DeleteFiles(std::string file) {
+            const char* filename = file.c_str();
+            if (std::remove(filename) != 0) {
+                return false;
+            } else {
+                return true;
             }
         }
-		return ans;
+
+        /**
+         * @brief ÅĞ¶ÏÎÄ¼şÀàĞÍ
+         * 
+         * @param fileExtension ÎÄ¼şºó×º ÒªÇó´ø '.' (dot)
+         * @return std::string 
+         */
+        std::string JudgeFileType(const char* fileExtension) {
+            std::string result;
+            std::string keyPath = std::string(fileExtension);
+            HKEY hKey;
+            LONG lResult = RegOpenKeyExA(HKEY_CLASSES_ROOT, keyPath.c_str(), 0, KEY_READ, &hKey);
+            if (lResult == ERROR_SUCCESS) {
+                char buffer[MAX_PATH];
+                DWORD bufferSize = MAX_PATH;
+                lResult = RegQueryValueExA(hKey, NULL, NULL, NULL, reinterpret_cast<LPBYTE>(buffer), &bufferSize);
+                if (lResult == ERROR_SUCCESS) {
+                    std::string classKey = buffer;
+                    keyPath = classKey;
+                    lResult = RegOpenKeyExA(HKEY_CLASSES_ROOT, keyPath.c_str(), 0, KEY_READ, &hKey);
+                    if (lResult == ERROR_SUCCESS) {
+                        bufferSize = MAX_PATH;
+                        lResult = RegQueryValueExA(hKey, NULL, NULL, NULL, reinterpret_cast<LPBYTE>(buffer), &bufferSize);
+                        if (lResult == ERROR_SUCCESS) {
+                            result = buffer;
+                        }
+                        RegCloseKey(hKey);
+                    }
+                }
+                RegCloseKey(hKey);
+            }
+
+            if (result.empty()) {
+                result = "Unknown File Type";
+            }
+
+            return result;
+        }
+
+        /**
+         * @brief ´´½¨Ò»¸öÃûÎª FileName µÄ¿ì½İ·½Ê½
+         * 
+         * @param FileName ÎÄ¼şÃû
+         * @param Description ÃèÊö
+         * @param IconPath ¿ì½İ·½Ê½µÄÍ¼±êÂ·¾¶
+         * @param TargetPath ¿ì½İ·½Ê½Ö¸ÏòµÄÄ¿±ê¿ÉÖ´ĞĞÎÄ¼ş
+         * @return true 
+         * @return false 
+         */
+        bool CreateLNK(std::string FileName, std::string Description, std::string IconPath, std::string TargetPath) {
+            CoInitialize(NULL);
+
+            IShellLink* pShellLink;
+            HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pShellLink);
+            if (SUCCEEDED(hres)) {
+                pShellLink->SetPath(TargetPath.c_str());
+                pShellLink->SetDescription(Description.c_str());
+                pShellLink->SetIconLocation(IconPath.c_str(), 0);
+
+                IPersistFile* pPersistFile;
+                hres = pShellLink->QueryInterface(IID_IPersistFile, (LPVOID*)&pPersistFile);
+                if (SUCCEEDED(hres)) {
+                    std::wstring wsz = std::wstring(FileName.begin(), FileName.end());
+                    hres = pPersistFile->Save(wsz.c_str(), TRUE);
+                    pPersistFile->Release();
+                }
+
+                pShellLink->Release();
+            }
+
+            CoUninitialize();
+
+            return SUCCEEDED(hres);
+        }
+
+        /**
+         * @brief ¸Ãº¯ÊıÎª ¶ÁÈ¡ pathÏÂµÄËùÓĞÎÄ¼ş
+         * 
+         * @param path 
+         * @example
+         *  auto* fileList = LoopPath("C:\\Windows");
+            if (fileList) {
+                for (const auto& file : *fileList) {
+                    std::cout << "File: " << file.first << ", Type: " << file.second << std::endl;
+                }
+                delete fileList;
+            }
+        * @return std::vector<std::pair<std::string, std::string>>* ÆäÖĞ µÚÒ»¸ö std::string ÎªÎÄ¼şÃû, µÚ¶ş¸ö std::string ÎªÎÄ¼şÀàĞÍ
+        */
+        std::vector<std::pair<std::string, std::string>>* LoopPath(const char* path) {
+            std::string searchPath = std::string(path) + "\\*";
+            WIN32_FIND_DATAA findData;
+            HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+
+            if (hFind == INVALID_HANDLE_VALUE) {
+                return nullptr;
+            }
+
+            auto* result = new std::vector<std::pair<std::string, std::string>>();
+            do {
+                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                    result->emplace_back(findData.cFileName, "Directory");
+                } else {
+                    std::string fileName = findData.cFileName;
+                    size_t dotPos = fileName.rfind('.');
+                    std::string fileType = (dotPos != std::string::npos) ? fileName.substr(dotPos + 1) : "";
+                    result->emplace_back(fileName, fileType);
+                }
+            } while (FindNextFileA(hFind, &findData) != 0);
+
+            FindClose(hFind);
+            return result;
+        }
+
+        
+
+        /**
+         * @brief °Ñ FileOrigin ¿½±´µ½ FileDestination
+         * 
+         * @param FileOrigin Òª¿½±´µÄÎÄ¼ş, ÒªÇóÊÇÂ·¾¶´øÎÄ¼şÃû
+         * @param FileDestination ¿½±´µÄÖÕµã, Í¬ÑùÊÇÂ·¾¶´øÎÄ¼şÃû
+         * @param IfCoveredWhenExist µ± IfCoveredWhenExist Îª false Ê±, ¼´ µ±Í¬ÃûÎÄ¼ş´æÔÚÊ±, ²»¸²¸Ç, ·´Ö®ÒàÈ»
+         * @return bool ¿½±´³É¹¦·µ»Ø true£¬Ê§°Ü·µ»Ø false
+         */
+        bool UpdatedCopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist) {
+            // ¼ì²éÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+            struct stat buffer;
+            if (stat(FileOrigin, &buffer) != 0) {
+                std::cerr << "Ô´ÎÄ¼ş " << FileOrigin << " ²»´æÔÚ¡£" << std::endl;
+                return false;
+            }
+
+            // ¼ì²éÄ¿±êÎÄ¼şÊÇ·ñ´æÔÚ
+            if (stat(FileDestination, &buffer) == 0 && !IfCoveredWhenExist) {
+                std::cerr << "Ä¿±êÎÄ¼ş " << FileDestination << " ÒÑ´æÔÚ£¬ÇÒ²»ÔÊĞí¸²¸Ç¡£" << std::endl;
+                return false;
+            }
+
+            // ´ò¿ªÔ´ÎÄ¼ş
+            FILE* sourceFile = fopen(FileOrigin, "rb");
+            if (sourceFile == nullptr) {
+                std::cerr << "ÎŞ·¨´ò¿ªÔ´ÎÄ¼ş " << FileOrigin << std::endl;
+                return false;
+            }
+
+            // ´ò¿ªÄ¿±êÎÄ¼ş
+            FILE* destFile = fopen(FileDestination, "wb");
+            if (destFile == nullptr) {
+                std::cerr << "ÎŞ·¨´ò¿ªÄ¿±êÎÄ¼ş " << FileDestination << std::endl;
+                fclose(sourceFile);
+                return false;
+            }
+
+            // »º³åÇø´óĞ¡
+            const size_t bufferSize = 4096;
+            char bufferData[bufferSize];
+            size_t bytesRead;
+
+            // Öğ¿é¸´ÖÆÎÄ¼şÄÚÈİ
+            while ((bytesRead = fread(bufferData, 1, bufferSize, sourceFile)) > 0) {
+                if (fwrite(bufferData, 1, bytesRead, destFile) != bytesRead) {
+                    std::cerr << "Ğ´ÈëÄ¿±êÎÄ¼şÊ±³ö´í¡£" << std::endl;
+                    fclose(sourceFile);
+                    fclose(destFile);
+                    return false;
+                }
+            }
+
+            // ¹Ø±ÕÎÄ¼ş
+            fclose(sourceFile);
+            fclose(destFile);
+
+            std::cout << "ÎÄ¼ş¸´ÖÆ³É¹¦£¬´Ó " << FileOrigin << " µ½ " << FileDestination << std::endl;
+            return true;
+        }
+
+        /**
+         * @brief »ñµÃÖ¸¶¨ÎÄ¼ş¼ĞÏÂµÄÎÄ¼ş¼°ÆäÀàĞÍ ¼Ó¸ö Easier ÊÇÒòÎª ·µ»Ø»ØÀ´µÄÊı¾İ¸üºÃ´¦ÀíÁË
+         * 
+         * @param path ÍêÕûÂ·¾¶
+         * @return std::vector<FileInfo> 
+         */
+        std::vector<FileInfo> LoopPathEasier(const char* path) {
+            std::vector<FileInfo> files;
+            std::string searchPath = std::string(path) + "\\*";
+            WIN32_FIND_DATAA findData;
+            HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+            if (hFind != INVALID_HANDLE_VALUE) {
+                do {
+                    if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                        FileInfo file;
+                        file.name = findData.cFileName;
+                        std::string fileName = findData.cFileName;
+                        size_t dotPos = fileName.find_last_of('.');
+                        if (dotPos != std::string::npos) {
+                            file.type = fileName.substr(dotPos);
+                        } else {
+                            file.type = "";
+                        }
+                        files.push_back(file);
+                    }
+                } while (FindNextFileA(hFind, &findData));
+                FindClose(hFind);
+            }
+            return files;
+        }
+
+        
+
+        /**
+         * @brief ²éÑ¯¿ì½İ·½Ê½ÎÄ¼şËù¶ÔµÄÄ¿±ê¿ÉÖ´ĞĞ³ÌĞò»òÃüÁîĞĞ
+         * 
+         * @param LNKFile 
+         * @return std::string / Ä¿±ê¿ÉÖ´ĞĞ³ÌĞò
+         */
+        std::string SeekLNKTargetFile(const char* LNKFile) {
+            std::string target;
+
+            // ³õÊ¼»¯ COM ¿â
+            HRESULT hr = CoInitialize(NULL);
+            if (FAILED(hr)) {
+                return target;
+            }
+
+            // ´´½¨ Shell Á´½Ó¶ÔÏó£¨Ê¹ÓÃ Unicode °æ±¾£©
+            IShellLinkW* psl;
+            hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID*)&psl);
+            if (SUCCEEDED(hr)) {
+                // ¼ÓÔØ¿ì½İ·½Ê½ÎÄ¼ş
+                IPersistFile* ppf;
+                hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
+                if (SUCCEEDED(hr)) {
+                    // ÒÔ Unicode ¸ñÊ½¼ÓÔØÎÄ¼ş
+                    WCHAR wsz[MAX_PATH];
+                    MultiByteToWideChar(CP_ACP, 0, LNKFile, -1, wsz, MAX_PATH);
+                    hr = ppf->Load(wsz, STGM_READ);
+                    if (SUCCEEDED(hr)) {
+                        // »ñÈ¡Ä¿±êÎÄ¼şÂ·¾¶£¨Ê¹ÓÃ³¤ÎÄ¼şÃû£©
+                        WCHAR wszTarget[MAX_PATH];
+                        hr = psl->GetPath(wszTarget, MAX_PATH, NULL, SLGP_RAWPATH);
+                        if (SUCCEEDED(hr)) {
+                            char szTarget[MAX_PATH];
+                            WideCharToMultiByte(CP_ACP, 0, wszTarget, -1, szTarget, MAX_PATH, NULL, NULL);
+                            target = szTarget;
+                        }
+                    }
+                    ppf->Release();
+                }
+                psl->Release();
+            }
+
+            // ÊÍ·Å COM ¿â
+            CoUninitialize();
+
+            return target;
+        }
+
+        /**
+         * @brief Open "Open File" Window / ´ò¿ª "´ò¿ªÎÄ¼ş" ´°¿Ú²¢·µ»ØÓÃ»§Ñ¡ÔñµÄÎÄ¼ş
+         * 
+         * @return std::string
+         */
+        std::string OpenFileWindow(){
+            OPENFILENAME ofn;       // ½á¹¹ÌåÓÃÓÚ±£´æÎÄ¼ş¶Ô»°¿òµÄĞÅÏ¢
+            char szFile[260];       // ÓÃÓÚ±£´æÑ¡ÔñµÄÎÄ¼şÂ·¾¶
+    
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.lpstrFile = szFile;
+            ofn.lpstrFile[0] = '\0';
+            ofn.nMaxFile = sizeof(szFile);
+            ofn.lpstrFilter = "All Files\0*.*\0";
+            ofn.nFilterIndex = 1;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    
+            // ´ò¿ªÎÄ¼ş¶Ô»°¿ò
+            GetOpenFileName(&ofn);
+    
+            std::string OpenFile(szFile);
+    
+            return OpenFile;
+        }
     }
 
-    ULL A(ULL a, ULL b){
-        ULL ans = 1;
-        if (a == b)
-            return fact(a);
-        for (int i = b - a + 1; i <= b; i ++){
-            ans *= i;
+    namespace Registry{
+        /**
+         * @brief Set the Register Key In Current User object / ÔÚ HKCU ÖĞĞ´Èë¼üÖµ
+         * 
+         * @param subKey Registry Key Path / Â·¾¶
+         * @param valueName Register Key Name / ÏîÃû
+         * @param filePath value / ¼üÖµ
+         * @return true 
+         * @return false 
+         */
+        bool SetRegisterKeyInCurrentUser(const char* subKey, const char* valueName, const char* filePath) {
+            HKEY hKey;
+            
+            // ´ò¿ª»ò´´½¨×¢²á±í×ÓÏî
+            long result = RegCreateKeyExA(HKEY_CURRENT_USER, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+            if (result != ERROR_SUCCESS) {
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // Ğ´Èë¼üÖµÊı¾İ
+            result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
+            if (result != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+            RegCloseKey(hKey);
+
+            return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
         }
-        return ans;
+
+        /**
+         * @brief Set the Registry Key In Local Machine object / ÔÚ HKLM ÖĞĞ´Èë¼üÖµ
+         * 
+         * @param subKey Registry Key Path / Â·¾¶
+         * @param valueName Register Key Name / ÏîÃû
+         * @param filePath value / ¼üÖµ
+         * @return true 
+         * @return false 
+         */
+        bool SetRegisterKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath) {
+            HKEY hKey;
+            
+            // ´ò¿ª»ò´´½¨×¢²á±í×ÓÏî
+            long result = RegCreateKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+            if (result != ERROR_SUCCESS) {
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // Ğ´Èë¼üÖµÊı¾İ
+            result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
+            if (result != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+            RegCloseKey(hKey);
+
+            return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        }
+        
+        /**
+         * @brief »ñÈ¡ HKCU ÖĞµÄ×¢²á±í¼üÖµ
+         * 
+         * @param path Òª»ñÈ¡µÄ×¢²á±í¼üÖµÂ·¾¶
+         * @param name Ãû×Ö
+         * @return value (std::string)
+        */
+        std::string GetRegisterKeyValueInCurrentUser(std::string path, std::string name) {
+            HKEY hKey;
+            std::string value;
+
+            if (RegOpenKeyExA(HKEY_CURRENT_USER, path.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+                DWORD dataSize = 1024;
+                char data[1024];
+                DWORD type;
+
+                if (RegQueryValueExA(hKey, name.c_str(), NULL, &type, (LPBYTE)data, &dataSize) == ERROR_SUCCESS) {
+                    value = std::string(data);
+                }
+
+                RegCloseKey(hKey);
+            }
+
+            return value;
+        }
+
+        /**
+         * @brief »ñÈ¡ HKLM ÖĞµÄ×¢²á±í¼üÖµ
+         * 
+         * @param path Òª»ñÈ¡µÄ×¢²á±í¼üÖµÂ·¾¶
+         * @param name Ãû×Ö
+         * @return value (std::string)
+        */
+        std::string GetRegisterKeyValueInLocalMachine(std::string path, std::string name) {
+            HKEY hKey;
+            std::string value;
+
+            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+                DWORD dataSize = 1024;
+                char data[1024];
+                DWORD type;
+
+                if (RegQueryValueExA(hKey, name.c_str(), NULL, &type, (LPBYTE)data, &dataSize) == ERROR_SUCCESS) {
+                    value = std::string(data);
+                }
+
+                RegCloseKey(hKey);
+            }
+
+            return value;
+        }
+
+        /**
+         * @brief ½«×¢²á±í HKCU ÖĞ path Â·¾¶µÄÃûÎª name µÄ×¢²á±í¼üÖµ¸ÄÎª value
+         * 
+         * @param path ÒªĞŞ¸ÄµÄ×¢²á±í¼üÖµµÄÂ·¾¶
+         * @param name Ãû×Ö
+         * @param value ĞŞ¸ÄºóµÄ¼üÖµ
+         * @return true 
+         * @return false 
+         */
+        bool ModifyRegisterKeyValueInCurrentUser(std::string path, std::string name, std::string value) {
+            HKEY hKey;
+            
+            if (RegOpenKeyExA(HKEY_CURRENT_USER, path.c_str(), 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+                if (RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (const BYTE*)value.c_str(), (DWORD)(value.length() + 1)) == ERROR_SUCCESS) {
+                    RegCloseKey(hKey);
+                    return true;
+                }
+                
+                RegCloseKey(hKey);
+            }
+            
+            return false;
+        }
+
+        /**
+         * @brief ½«×¢²á±í HKLM ÖĞ path Â·¾¶µÄÃûÎª name µÄ×¢²á±í¼üÖµ¸ÄÎª value
+         * 
+         * @param path ÒªĞŞ¸ÄµÄ×¢²á±í¼üÖµµÄÂ·¾¶
+         * @param name Ãû×Ö
+         * @param value ĞŞ¸ÄºóµÄ¼üÖµ
+         * @return true 
+         * @return false 
+         */
+        bool ModifyRegisterKeyValueInLocalMachine(std::string path, std::string name, std::string value) {
+            HKEY hKey;
+            
+            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+                if (RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (const BYTE*)value.c_str(), (DWORD)(value.length() + 1)) == ERROR_SUCCESS) {
+                    RegCloseKey(hKey);
+                    return true;
+                }
+                
+                RegCloseKey(hKey);
+            }
+            
+            return false;
+        }
+
+        /**
+         * @brief É¾³ı HKCU ÖĞ subKey Â·¾¶ÏÂµÄ valueName
+         * 
+         * @param subKey Â·¾¶
+         * @param valueName ×¢²á±íÏîµÄÃû×Ö
+         * @return true 
+         * @return false 
+         */
+        bool DeleteRegistryKeyInCurrentUser(const char* subKey, const char* valueName) {
+            HKEY hKey;
+            
+            // ´ò¿ª×¢²á±í×ÓÏî
+            long result = RegOpenKeyExA(HKEY_CURRENT_USER, subKey, 0, KEY_WRITE, &hKey);
+            if (result != ERROR_SUCCESS) {
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // É¾³ı¼üÖµÊı¾İ
+            result = RegDeleteValueA(hKey, valueName);
+            if (result != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+            RegCloseKey(hKey);
+
+            return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        }
+
+        /**
+         * @brief É¾³ı HKLM ÖĞ subKey Â·¾¶ÏÂµÄ valueName
+         * 
+         * @param subKey Â·¾¶
+         * @param valueName ×¢²á±íÏîµÄÃû×Ö
+         * @return true 
+         * @return false 
+         */
+        bool DeleteRegistryKeyInLocalMachine(const char* subKey, const char* valueName) {
+            HKEY hKey;
+            
+            // ´ò¿ª×¢²á±í×ÓÏî
+            long result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, KEY_WRITE, &hKey);
+            if (result != ERROR_SUCCESS) {
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // É¾³ı¼üÖµÊı¾İ
+            result = RegDeleteValueA(hKey, valueName);
+            if (result != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return false;  // ×¢²á±í²Ù×÷Ê§°Ü
+            }
+
+            // ¹Ø±Õ×¢²á±í¼ü¾ä±ú
+            RegCloseKey(hKey);
+
+            return true;  // ³É¹¦Íê³É×¢²á±í²Ù×÷
+        }
+
+        /**
+         * @brief Ìí¼Ó×ÔÆôÏî, path ½öÏŞ HKCU ºÍ HKLM
+         * 
+         * @param path ÏŞÖÆÎª HKCU ºÍ HKLM, ·Ö±ğÔÚ HKCU ºÍ HKLM Ìí¼Ó¼üÖµ
+         * @param name ×ÔÆôÏîµÄÃû×Ö
+         * @param value ×ÔÆôÏîµÄ¼üÖµ
+         * @return true 
+         * @return false 
+         */
+        bool AddAutoRun(RegistryRootPath path, std::string name, std::string value){
+            bool result = false;
+            if (path == RegistryRootPath::HKCU){
+                result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), value.c_str());
+            }
+            else if (path == RegistryRootPath::HKLM){
+                result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), value.c_str());
+            }
+
+            return result;
+        }
+
+        /**
+         * @brief Ìí¼Ó Explorer.exe µÄÏŞÖÆÏî Ä¬ÈÏ¼üÖµÎª 1
+         * 
+         * @param path ÏŞÖÆÎª HKCU ºÍ HKLM, ·Ö±ğÔÚ HKCU ºÍ HKLM Ìí¼Ó¼üÖµ
+         * @param name ÏŞÖÆÏîµÄÃû×Ö
+         * @return true 
+         * @return false 
+         */
+        bool AddExplorerRestrict(RegistryRootPath path, std::string name){
+            bool result = false;
+            if (path == RegistryRootPath::HKCU){
+                result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), "1");
+            }
+            else if (path == RegistryRootPath::HKLM){
+                result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), "1");
+            }
+            return result;
+        }
+
+        /**
+         * @brief ¸Ãº¯ÊıÎª¶ÁÈ¡ Hkey\path ÏÂµÄËùÓĞ¼üÖµ
+         * 
+         * @param Hkey 
+         * @param path
+         * @example 
+         *  auto* registryValues = GetRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+            if (registryValues->first) {
+                std::cout << "Registry values:\n" << registryValues->second << std::endl;
+            }
+            delete registryValues;
+        * @return std::pair<bool, std::string>* ÆäÖĞ bool Îª»ñÈ¡ÊÇ·ñ³É¹¦ std::string Îª¼üÖµ Èç¹ûÊ§°ÜÔòÎª¿Õ
+        */
+        std::pair<bool, std::string>* GetRegistryKey(HKEY Hkey, const char* path) {
+            HKEY hKey;
+            LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+            if (lResult != ERROR_SUCCESS) {
+                return new std::pair<bool, std::string>(false, "");
+            }
+
+            std::string allValues;
+            DWORD index = 0;
+            char valueName[256];
+            DWORD valueNameSize = sizeof(valueName);
+            BYTE data[1024];
+            DWORD dataSize = sizeof(data);
+            DWORD type;
+
+            while (RegEnumValue(hKey, index, valueName, &valueNameSize, NULL, &type, data, &dataSize) == ERROR_SUCCESS) {
+                if (type == REG_SZ) {
+                    allValues += std::string(valueName) + "=" + std::string(reinterpret_cast<char*>(data)) + "\n";
+                }
+                index++;
+                valueNameSize = sizeof(valueName);
+                dataSize = sizeof(data);
+            }
+
+            RegCloseKey(hKey);
+            return new std::pair<bool, std::string>(true, allValues);
+        }
+        /**
+         * @brief ¸Ãº¯ÊıÎª¶ÁÈ¡ Hkey\path ÏÂµÄ name Ïî 
+         * 
+         * @param Hkey 
+         * @param path 
+         * @param name 
+         * @example
+         *  auto registryExisted = IfRegistryKeyExisted(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
+            if (registryExisted.first) {
+                std::cout << "Registry value: " << registryExisted.second << std::endl;
+            }
+        * @return std::pair<bool, std::string> ÆäÖĞ bool Îª»ñÈ¡µÄ³É¹¦»òÊ§°Ü, std::string Îª¼üÖµ Èç¹û»ñÈ¡Ê§°ÜÔòÎª¿Õ
+        */
+        std::pair<bool, std::string> IfRegistryKeyExisted(HKEY Hkey, const char* path, const char* name) {
+            HKEY hKey;
+            LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+            if (lResult != ERROR_SUCCESS) {
+                return std::make_pair(false, "");
+            }
+
+            BYTE data[1024];
+            DWORD dataSize = sizeof(data);
+            DWORD type;
+            lResult = RegQueryValueEx(hKey, name, NULL, &type, data, &dataSize);
+            if (lResult != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return std::make_pair(false, "");
+            }
+
+            std::string value = std::string(reinterpret_cast<char*>(data));
+            RegCloseKey(hKey);
+            return std::make_pair(true, value);
+        }
+
+        /**
+         * @brief »ñµÃÌØ¶¨Ä¿Â¼µÄ×¢²á±íÏî, ¼Ó¸ö Easier ÊÇÒòÎª ·µ»Ø»ØÀ´µÄÊı¾İ¸üºÃ´¦ÀíÁË
+         * 
+         * @param Hkey Eg. HKEY_CURRENT_USER
+         * @param path Â·¾¶ Èç "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+         * @return std::vector<std::string> 
+         */
+        std::vector<std::string> GetRegistryKeyEasier(HKEY Hkey, const char* path) {
+            std::vector<std::string> keys;
+            HKEY hKey;
+            if (RegOpenKeyExA(Hkey, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+                DWORD index = 0;
+                char valueName[MAX_PATH];
+                DWORD valueNameSize = MAX_PATH;
+                while (RegEnumValueA(hKey, index, valueName, &valueNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+                    keys.emplace_back(valueName);
+                    index ++;
+                    valueNameSize = MAX_PATH;
+                }
+                RegCloseKey(hKey);
+            }
+            return keys;
+        }
+
+        /**
+         * @brief É¨Ãè Hkey\path ÏÂËùÓĞ°üº¬ SpecialKey µÄÏî ²¢·µ»Ø¼üÖµ
+         * 
+         * @param Hkey 
+         * @param path 
+         * @param SpecialKey ÌØÊâµÄÏîÃû
+         * @return std::vector<RegistryKey> 
+         */
+        std::vector<RegistryKey> ParticularRegistryKeyEasier(HKEY Hkey, const char* path, const char* SpecialKey) {
+            std::vector<RegistryKey> keys;
+            HKEY hKey;
+            if (RegOpenKeyExA(Hkey, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+                DWORD index = 0;
+                char valueName[MAX_PATH];
+                DWORD valueNameSize = MAX_PATH;
+                DWORD type;
+                char valueData[MAX_PATH];
+                DWORD valueDataSize = MAX_PATH;
+                while (RegEnumValueA(hKey, index, valueName, &valueNameSize, NULL, &type, (BYTE*)valueData, &valueDataSize) == ERROR_SUCCESS) {
+                    if (std::string(valueName) == SpecialKey) {
+                        RegistryKey key;
+                        key.Path = std::string(path) + "\\" + valueName;
+                        switch (type) {
+                            case REG_SZ:
+                                key.type = "REG_SZ";
+                                break;
+                            // ¿ÉÒÔÌí¼Ó¸ü¶àÀàĞÍ´¦Àí
+                            case REG_DWORD:
+                                key.type = "REG_DWORD";
+                                break;
+                            default:
+                                key.type = "UNKNOWN";
+                                break;
+                        }
+                        key.Value = valueData;
+                        keys.push_back(key);
+                    }
+                    index ++;
+                    valueNameSize = MAX_PATH;
+                    valueDataSize = MAX_PATH;
+                }
+                RegCloseKey(hKey);
+            }
+            return keys;
+        }
+
+        /** @brief ±éÀú hkey\path ÏÂµÄËùÓĞÏî¼°¼üÖµ
+         *
+         * @param hkey
+         * @param path
+         *
+         * @return std::vector<DetailedRegistryKey> / ½«ËùÓĞ¼üÓë¼üÖµ¶¼¶ÁÈ¡µ½´ËµØ²¢·µ»Ø
+        */
+        std::vector<DetailedRegistryKey> LoopRegistryPath(HKEY hkey, const char* path) {
+            std::vector<DetailedRegistryKey> keys;
+
+            HKEY hSubKey;
+            if (RegOpenKeyExA(hkey, path, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS) {
+                std::cerr << "Failed to open registry key: " << path << std::endl;
+                return keys;
+            }
+
+            char valueName[MAX_PATH];
+            DWORD valueNameSize = MAX_PATH;
+            DWORD valueType;
+            BYTE valueData[1024];
+            DWORD valueDataSize = sizeof(valueData);
+
+            DWORD index = 0;
+            while (true) {
+                valueNameSize = MAX_PATH;
+                valueDataSize = sizeof(valueData);
+                if (RegEnumValueA(hSubKey, index, valueName, &valueNameSize, NULL, &valueType, valueData, &valueDataSize) == ERROR_SUCCESS) {
+                    DetailedRegistryKey key;
+                    key.Path = path;
+                    key.Name = valueName;
+                    key.Type = RegTypeToString(valueType);
+                    key.Value = RegValueToString(valueData, valueDataSize, valueType);
+                    keys.push_back(key);
+                    index++;
+                } else {
+                    break;
+                }
+            }
+
+            RegCloseKey(hSubKey);
+            return keys;
+        }
+
+        /**
+         *	@brief ½«×¢²á±íÊı¾İÀàĞÍ×ª»»Îª×Ö·û´®
+        *	
+        *	@param type Eg. type = REG_SZ
+        *	@return std::string / type STRING of RegType / ×Ö·û´®ÀàĞÍµÄ×¢²á±íÊı¾İÀàĞÍ
+        */
+        std::string RegTypeToString(DWORD type) {
+            switch (type) {
+                case REG_SZ: return "REG_SZ";
+                case REG_DWORD: return "REG_DWORD";
+                case REG_BINARY: return "REG_BINARY";
+                case REG_MULTI_SZ: return "REG_MULTI_SZ";
+                case REG_EXPAND_SZ: return "REG_EXPAND_SZ";
+                case REG_QWORD: return "REG_QWORD";
+                default: return "UNKNOWN";
+            }
+        }
+        
+        /**
+         * @brief ½«×¢²á±í¼üÖµ×ª»¯Îª×Ö·û´®ÀàĞÍ
+         *
+         * @param data / Êı¾İ
+         * @param size / Data (MAYBE)
+         * @param type / ÀàĞÍ
+         *
+         * @return std::string 
+        */
+        std::string RegValueToString(BYTE* data, DWORD size, DWORD type) {
+            switch (type) {
+                case REG_SZ:
+                case REG_EXPAND_SZ:
+                    return std::string((char*)data);
+                case REG_DWORD:
+                    return std::to_string(*(DWORD*)data);
+                case REG_QWORD:
+                    return std::to_string(*(ULONGLONG*)data);
+                case REG_MULTI_SZ: {
+                    std::string result;
+                    char* p = (char*)data;
+                    while (*p) {
+                        result += p;
+                        result += "\n";
+                        p += strlen(p) + 1;
+                    }
+                    return result;
+                }
+                case REG_BINARY: {
+                    std::string result;
+                    for (DWORD i = 0; i < size; i++) {
+                        char buf[3];
+                        sprintf(buf, "%02X", data[i]);
+                        result += buf;
+                        if (i < size - 1) result += " ";
+                    }
+                    return result;
+                }
+                default:
+                    return "UNSUPPORTED_TYPE";
+            }
+        }
+
+        /**
+         * @brief ¸Ãº¯ÊıÎª ¶ÁÈ¡ Hkey\path ÏÂµÄËùÓĞÏî ÊÇ·ñ´æÔÚ SpecialKey ÕâÒ»Ïî
+         * 
+         * @param Hkey 
+         * @param path 
+         * @param SpecialKey 
+         * @example
+         *  auto* particularKey = ParticularRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
+            if (!particularKey->first.empty()) {
+                std::cout << "Registry path: " << particularKey->first << ", Value: " << particularKey->second << std::endl;
+            }
+            delete particularKey;
+        * @return std::pair<std::string, std::string>* µÚÒ»¸ö std::string ·µ»Ø×¢²á±íÄ¿Â¼, µÚ¶ş¸ö std::string Îª¼üÖµ
+        */
+        std::pair<std::string, std::string>* ParticularRegistryKey(HKEY Hkey, const char* path, const char* SpecialKey) {
+            HKEY hKey;
+            LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
+            if (lResult != ERROR_SUCCESS) {
+                return new std::pair<std::string, std::string>("", "");
+            }
+
+            BYTE data[1024];
+            DWORD dataSize = sizeof(data);
+            DWORD type;
+            lResult = RegQueryValueEx(hKey, SpecialKey, NULL, &type, data, &dataSize);
+            if (lResult != ERROR_SUCCESS) {
+                RegCloseKey(hKey);
+                return new std::pair<std::string, std::string>("", "");
+            }
+
+            std::string value = std::string(reinterpret_cast<char*>(data));
+            RegCloseKey(hKey);
+            return new std::pair<std::string, std::string>(std::string(path), value);
+        }
+    };
+
+    namespace Process{
+        namespace Run{
+            /**
+             * @brief ½áÊø ImageName ËùÖ¸µÄ½ø³Ì
+             * 
+             * @param ImageName Ó³ÏñÃû×Ö
+             * @return true 
+             * @return false 
+             */
+            bool KillProcess(const std::string& ImageName) {
+                std::string lowerName = ImageName;
+                std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+
+                HANDLE hProcessSnap;
+                PROCESSENTRY32 pe32;
+
+                hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                if (hProcessSnap == INVALID_HANDLE_VALUE) {
+                    return false;
+                }
+
+                pe32.dwSize = sizeof(PROCESSENTRY32);
+
+                if (!Process32First(hProcessSnap, &pe32)) {
+                    CloseHandle(hProcessSnap);
+                    return false;
+                }
+
+                do {
+                    std::string processName = pe32.szExeFile;
+                    std::transform(processName.begin(), processName.end(), processName.begin(), ::tolower);
+
+                    if (lowerName == processName) {
+                        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pe32.th32ProcessID);
+                        if (hProcess != NULL) {
+                            TerminateProcess(hProcess, 0);
+                            CloseHandle(hProcess);
+                        }
+                    }
+                } while (Process32Next(hProcessSnap, &pe32));
+
+                CloseHandle(hProcessSnap);
+                return true;
+            }
+
+            /**
+             * @brief ´ò¿ª file ËùÖ¸µÄÎÄ¼ş
+             * 
+             * @param file 
+             * @return true
+             */
+            bool OpenApplication(const char* file){
+                ShellExecute(NULL, "open", file, NULL, NULL, SW_SHOWNORMAL);
+                return true;
+            }
+
+            /**
+             * @brief Open An Application with Admin Privileges. / ÒÔ¹ÜÀíÔ±È¨ÏŞ´ò¿ªÄ³Ò»¿ÉÖ´ĞĞÎÄ¼ş
+             * 
+             * @param file 
+             * @return true
+             * @return false
+             */
+            bool OpenApplicationAsAdmin(const char* file) {
+                SHELLEXECUTEINFO shExecInfo = {};
+                ZeroMemory(&shExecInfo, sizeof(SHELLEXECUTEINFO));
+                shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+                shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+                shExecInfo.hwnd = NULL;
+                shExecInfo.lpVerb = "runas"; // This is what makes it run as admin
+                shExecInfo.lpFile = file;
+                shExecInfo.lpParameters = NULL;
+                shExecInfo.lpDirectory = NULL;
+                shExecInfo.nShow = SW_NORMAL;
+                shExecInfo.hInstApp = NULL;
+
+                return ShellExecuteEx(&shExecInfo);
+            }
+        }
+        namespace Monitor{
+            /**
+             * @brief ¼ì²â½ø³ÌÊÇ·ñ´æÔÚ
+             * 
+             * @param processName Ó³ÏñÃû×Ö
+             * @return true 
+             * @return false 
+             */
+            bool IsProcessRunning(const char* processName) {
+                HANDLE hProcessSnap;
+                PROCESSENTRY32 pe32;
+
+                hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                if (hProcessSnap == INVALID_HANDLE_VALUE) {
+                    return false;
+                }
+
+                pe32.dwSize = sizeof(PROCESSENTRY32);
+
+                if (!Process32First(hProcessSnap, &pe32)) {
+                    CloseHandle(hProcessSnap);
+                    return false;
+                }
+
+                do {
+                    if (_stricmp(processName, pe32.szExeFile) == 0) {
+                        CloseHandle(hProcessSnap);
+                        return true;
+                    }
+                } while (Process32Next(hProcessSnap, &pe32));
+
+                CloseHandle(hProcessSnap);
+                return false;
+            }
+
+            /**
+             * @brief Get the Running ProcessInfo Names object / »ñµÃËùÓĞÔËĞĞÖĞµÄ½ø³ÌÃû
+             * 
+             * @return std::vector<std::string> 
+             */
+            std::vector<std::string> GetRunningProcessNames() {
+                std::vector<std::string> processes;
+                HANDLE hProcessSnap;
+                PROCESSENTRY32 pe32;
+
+                // ´´½¨½ø³Ì¿ìÕÕ
+                hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                if (hProcessSnap == INVALID_HANDLE_VALUE) {
+                    return processes;
+                }
+
+                pe32.dwSize = sizeof(PROCESSENTRY32);
+
+                // »ñÈ¡µÚÒ»¸ö½ø³ÌĞÅÏ¢
+                if (Process32First(hProcessSnap, &pe32)) {
+                    do {
+                        processes.emplace_back(pe32.szExeFile);
+                    } while (Process32Next(hProcessSnap, &pe32));
+                }
+
+                CloseHandle(hProcessSnap);
+                return processes;
+            }
+
+            /**
+             * @brief »ñÈ¡Ö¸¶¨½ø³ÌµÄÃüÁîĞĞ ²»µ¥¶ÀÊ¹ÓÃ Îª GetRunningProcessWithCommandline() º¯ÊıµÄ¸¨Öúº¯Êı
+             * 
+             * @param hProcess 
+             * @return std::string 
+             */
+            std::string GetProcessCommandLine(HANDLE hProcess) {
+                PROCESS_BASIC_INFORMATION pbi;
+                NTSTATUS status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(pbi), nullptr);
+                if (status != 0) {
+                    return "";
+                }
+
+                // ¶ÁÈ¡ PEB µØÖ·
+                PEB peb;
+                if (!ReadProcessMemory(hProcess, pbi.PebBaseAddress, &peb, sizeof(peb), nullptr)) {
+                    return "";
+                }
+
+                // ¶ÁÈ¡½ø³Ì²ÎÊı¿é
+                RTL_USER_PROCESS_PARAMETERS upp;
+                if (!ReadProcessMemory(hProcess, peb.ProcessParameters, &upp, sizeof(upp), nullptr)) {
+                    return "";
+                }
+
+                // ¶ÁÈ¡ÃüÁîĞĞ
+                UNICODE_STRING commandLine = upp.CommandLine;
+                std::wstring wCommandLine(commandLine.Length / sizeof(wchar_t), L'\0');
+                if (!ReadProcessMemory(hProcess, commandLine.Buffer, &wCommandLine[0], commandLine.Length, nullptr)) {
+                    return "";
+                }
+
+                // ×ª»»Îª std::string
+                std::string commandLineStr(wCommandLine.begin(), wCommandLine.end());
+                return commandLineStr;
+            }
+
+            /**
+             * @brief Get the Running ProcessInfo With Commandline object And PID / ·µ»Ø½ø³ÌµÄÃû×Ö ÃüÁîĞĞ ¼° PID
+             * 
+             * @return std::vector<ProcessInfo> 
+             */
+            std::vector<ProcessInfo> GetRunningProcessWithCommandline() {
+                std::vector<ProcessInfo> processes;
+                HANDLE hProcessSnap;
+                PROCESSENTRY32 pe32;
+
+                hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                if (hProcessSnap == INVALID_HANDLE_VALUE) {
+                    return processes;
+                }
+
+                pe32.dwSize = sizeof(PROCESSENTRY32);
+
+                if (Process32First(hProcessSnap, &pe32)) {
+                    do {
+                        ProcessInfo ProcessInfo;
+                        ProcessInfo.Name = pe32.szExeFile;
+                        ProcessInfo.pid = pe32.th32ProcessID;
+
+                        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pe32.th32ProcessID);
+                        if (hProcess != NULL) {
+                            ProcessInfo.CommandLine = GetProcessCommandLine(hProcess);
+                            CloseHandle(hProcess);
+                        }
+
+                        processes.push_back(ProcessInfo);
+                    } while (Process32Next(hProcessSnap, &pe32));
+                }
+
+                CloseHandle(hProcessSnap);
+                return processes;
+            }
+        }
     }
 
     int lcm(int a, int b){
         return a * b / gcd(a, b);
     }
 
-    // ä¸¤ä¸ªå‚æ•° åˆ†åˆ«æ˜¯åˆ†å­å’Œåˆ†æ¯ è¿”å›ä¾ç„¶æ˜¯ä¸¤ä¸ªæ•°
+    // Á½¸ö²ÎÊı ·Ö±ğÊÇ·Ö×ÓºÍ·ÖÄ¸ ·µ»ØÒÀÈ»ÊÇÁ½¸öÊı
     PII frac(int a, int b){
         int temp = gcd(a, b);
         a /= temp, b /= temp;
@@ -77,10 +1117,10 @@ namespace Oxygen{
         return result;
     }
 	
-    // å»¶æ—¶è¾“å‡º 
-	void print(std::string out, int w_t){
+    // ÑÓÊ±Êä³ö 
+	void print(const std::string& out, int w_t){
 		int wait_time = w_t;
-		for (int i = 0;i < out.size();i ++){
+		for (int i = 0; i < static_cast<int>(out.size()); i ++){
 			if (GetAsyncKeyState(VK_RETURN)) wait_time = 0;
 			if (out[i] != '\n') cout << out[i];
 			else cout << '\n';
@@ -88,68 +1128,8 @@ namespace Oxygen{
 		}
 	}
 
-    // é™¤äº†ä¸€äº›æ™®é€šçš„é¢œè‰²ä¹‹å¤– \
-    è¿˜æœ‰ reseda æµ…ç»¿è‰² bluish æµ…è“è‰² reddish æµ…çº¢è‰² lavender æ·¡ç´«è‰² FaintYellow æ·¡é»„è‰²
-    void PrintColor(std::string type){
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);   
-        int target = 0;
-        if (type == "black")
-            target = 0;
-        else if (type == "blue")
-            target = 1;
-        else if (type == "green")
-            target = 2;
-        else if (type == "reseda") // æµ…ç»¿è‰²
-            target = 3;
-        else if (type == "red")
-            target = 4;
-        else if (type == "purple")
-            target = 5;
-        else if (type == "yellow")
-            target = 6;
-        else if (type == "white")
-            target = 7;
-        else if (type == "gray")
-            target = 8;
-        else if (type == "bluish"){ // æµ…è“è‰²
-            target = 9;
-        }
-        else if (type == "reddish"){ // æµ…çº¢è‰²
-            target = 12;
-        }
-        else if (type == "lavender"){ // æ·¡ç´«è‰²
-            target = 13;
-        }
-        else if (type == "FaintYellow"){ // æ·¡é»„è‰²
-            target = 14;
-        }
-        else{ // æœªçŸ¥é¢œè‰²å…¨éƒ¨ç”¨äº®ç™½è‰²
-            target = 15;
-        }
-        SetConsoleTextAttribute(hOut, target);
-    } 
-	
     /**
-     * @brief åˆ¤æ–­ä¸€ä¸ªæ•°æ˜¯å¦ä¸ºè´¨æ•°
-     * 
-     * @param n 
-     * @return true 
-     * @return false 
-     */
-	bool is_prime(LL n){
-        if (n <= 0)
-            return false;
-		LL temp = std::sqrt(n);
-		for (LL i = 2; i <= temp; i ++ ){
-			if (n % i == 0){
-				return false;
-			}
-		}	
-		return true;
-	}
-
-    /**
-     * @brief è®¡ç®— a çš„ b æ¬¡æ–¹
+     * @brief ¼ÆËã a µÄ b ´Î·½
      * 
      * @param a 
      * @param b 
@@ -173,7 +1153,7 @@ namespace Oxygen{
 
     }
     
-    // Double ç±»å‹çš„powå‡½æ•°
+    // Double ÀàĞÍµÄpowº¯Êı
     LD Dpow(LD a, LD b){
         if (a == 0 && b == 0){
             throw std::runtime_error("Syntax Error!");
@@ -190,164 +1170,17 @@ namespace Oxygen{
 
         return res;
     }
-
-    bool isminus(char a){
-        if (a == '-')
-            return true;
-        return false;
-    }
-
-    bool isminus(std::string a){
-        if (a == "-")
-            return true;
-        return false;
-    }
-
     /**
-     * @brief æ‰“å¼€ url(å‚æ•°) å¯¹åº”çš„ç½‘ç«™
+     * @brief ´ò¿ª url(²ÎÊı) ¶ÔÓ¦µÄÍøÕ¾
      * 
      * @param url 
      */
     void OpenWeb(const char* url){
-        HINSTANCE result = ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
-    }
-
-    // void OpenProcedure(char* file){
-    //     // å®šä¹‰å¹¶åˆå§‹åŒ– PROCESS_INFORMATION å’Œ STARTUPINFO ç»“æ„ä½“
-    //     PROCESS_INFORMATION pi;
-    //     STARTUPINFO si;
-    //     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    //     ZeroMemory(&si, sizeof(STARTUPINFO));
-    //     si.cb = sizeof(STARTUPINFO);
-
-    //     // å¯æ‰§è¡Œæ–‡ä»¶çš„è·¯å¾„å’Œå‘½ä»¤è¡Œå‚æ•°
-    //     LPCTSTR lpApplicationName = file;
-    //     LPTSTR lpCommandLine = NULL;
-
-    //     // è°ƒç”¨ CreateProcess å‡½æ•°åˆ›å»ºæ–°è¿›ç¨‹
-    //     BOOL bResult = CreateProcess(lpApplicationName, lpCommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-
-    //     if (bResult == FALSE){
-    //         cout << "CreateProcess failed!" << endl;
-    //         return;
-    //     }
-
-    //     // ç­‰å¾…æ–°è¿›ç¨‹ç»“æŸ
-    //     // WaitForSingleObject(pi.hProcess, INFINITE);
-
-    //     // å…³é—­è¿›ç¨‹å’Œçº¿ç¨‹çš„å¥æŸ„
-    //     CloseHandle(pi.hProcess);
-    //     CloseHandle(pi.hThread);
-
-    // }
-
-    /**
-     * @brief ç”¨ notepad.exe æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
-     * 
-     * @param file 
-     */
-    void OpenProcedure(char* file){
-        ShellExecute(NULL, "open", "notepad.exe", file, NULL, SW_SHOW);
+        ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
     }
 
     /**
-     * @brief ç”¨ notepad.exe æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
-     * 
-     * @param file 
-     */
-    void EditFile(char* file){
-        STARTUPINFO si = { sizeof(si) };
-        PROCESS_INFORMATION pi;
-
-        std::string TempStr;
-        TempStr.assign(file);
-
-        LPSTR lpstr = reinterpret_cast<LPSTR>(file);
-
-        if (CreateProcess("C:\\Windows\\System32\\notepad.exe", lpstr, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-            cout << "Success to open " << TempStr;
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
-        } 
-        else {
-            std::cerr << "Failed to open " << TempStr;
-        }
-    }
-
-    /**
-     * @brief å°† std::string ç±»å‹çš„æ•°æ®è½¬æ¢ä¸º char*
-     * 
-     * @param str 
-     * @return char* 
-     */
-    char* StringToChar(std::string str) {
-        // è·å–const char*ç±»å‹çš„æ•°æ®
-        const char* data = str.c_str();
-
-        // è®¡ç®—æ•°æ®é•¿åº¦å¹¶åˆ›å»ºæ–°çš„char*æ•°ç»„
-        size_t dataSize = std::strlen(data);
-        char* newData = new char[dataSize + 1];
-
-        // å¤åˆ¶æ•°æ®åˆ°æ–°çš„æ•°ç»„ä¸­
-        std::strcpy(newData, data);
-
-        // è¿”å›æ–°çš„æ•°ç»„
-        return newData;
-    }
-
-    LD check(LD a){
-        if (a < percent90){
-            return -1; // è¯´æ˜æ²¡æœ‰å…³ç³»
-        }
-        else if (a > percent90 && a < percent95){
-            return 90;
-        }
-        else if (a > percent95 && a < percent99){
-            return 95;
-        }
-        else if (a > percent99 && a < percent999){
-            return 99;
-        }
-        else if (a > percent999)
-            return 99.9;
-        else return -1; // ä¸å¯èƒ½è§¦å‘çš„æ åªæ˜¯é˜²æ­¢Warning
-    }
-    
-	bool isdigit(char a){
-		if (a >= '0' && a <= '9')
-			return true;
-		return false;
-	}
-	
-	bool isdigit(std::string str){
-		int len = str.length();
-		for (int i = 0; i < len; i ++ ){
-			if (!Oxygen::isdigit(str[i]))
-				return false;
-		}
-		
-		return true;
-	}
-	
-    void Average(){
-        std::string input;
-        int count = 0;
-        LD data = 0, sum = 0;
-        cout << "Entered Average Mode......" << endl;
-        while (cin >> input, input != "end" && isdigit(input)){
-        	data = stold(input);
-        	sum += data;
-        	count ++;
-		}
-		
-		cout << "Average is: " << std::setprecision(6) << sum / count << ", Amount is: " << count << endl;
-		
-		cout << "Exited Average Mode......" << endl;
-		return;
-    }
-
-    /**
-     * @brief æŠŠæ­¤æ—¶çš„æ—¶é—´è¾“å‡ºåˆ° ofs æŒ‡å®šçš„æ–‡ä»¶ä¸­
+     * @brief °Ñ´ËÊ±µÄÊ±¼äÊä³öµ½ ofs Ö¸¶¨µÄÎÄ¼şÖĞ
      * 
      * @param ofs 
      */
@@ -378,7 +1211,7 @@ namespace Oxygen{
     }
         
     /**
-     * @brief æŠŠå½“å‰æ—¶é—´è¾“å‡ºåˆ°æ§åˆ¶å°
+     * @brief °Ñµ±Ç°Ê±¼äÊä³öµ½¿ØÖÆÌ¨
      * 
      */
     void OutputTime(){
@@ -402,727 +1235,166 @@ namespace Oxygen{
         std::cout << minute << ":" << second; 
     }
 	
-    /**
-     * @brief æ‰“å¼€ file æ‰€æŒ‡çš„æ–‡ä»¶
-     * 
-     * @param file 
-     * @return true
-     */
-	bool OpenApplication(const char* file){
-		ShellExecute(NULL, "open", file, NULL, NULL, SW_SHOWNORMAL);
-        return true;
-	}
     
-    /**
-     * @brief æŠŠ FileOrigin æ‹·è´åˆ° FileDestination
-     * 
-     * @param FileOrigin è¦æ‹·è´çš„æ–‡ä»¶, è¦æ±‚æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
-     * @param FileDestination æ‹·è´çš„ç»ˆç‚¹, åŒæ ·æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
-     * @param IfCoveredWhenExist å½“ IfCoveredWhenExist ä¸º True æ—¶, å³ å½“åŒåæ–‡ä»¶å­˜åœ¨æ—¶, ä¸è¦†ç›–, åä¹‹äº¦ç„¶
-     */
-    void CopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist){
-        CopyFile(FileOrigin, FileDestination, IfCoveredWhenExist);
-    }
 
     /**
-     * @brief ç»“æŸ ImageName æ‰€æŒ‡çš„è¿›ç¨‹
+     * @brief Catch Output of a Console Application / ²¶×½Ò»¸öÃüÁîĞĞ½ø³ÌµÄ¿ØÖÆÌ¨Êä³ö½á¹û
      * 
-     * @param ImageName æ˜ åƒåå­—
-     * @return true 
-     * @return false 
+     * @param command You can input the name of application. / Òª²¶×½½á¹ûµÄÓ¦ÓÃ³ÌĞò
+     * @return std::vector<std::string>
      */
-    bool KillProcess(const std::string& ImageName) {
-        std::string lowerName = ImageName;
-        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+    std::vector<std::string> CatchResultOfConsolePlanA(const char* path) {
+        std::vector<std::string> output;
 
-        HANDLE hProcessSnap;
-        PROCESSENTRY32 pe32;
+        // ´´½¨¹ÜµÀÓÃÓÚ²¶»ñ×Ó½ø³ÌµÄÊä³ö
+        SECURITY_ATTRIBUTES saAttr;
+        saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+        saAttr.bInheritHandle = TRUE;
+        saAttr.lpSecurityDescriptor = NULL;
 
-        hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hProcessSnap == INVALID_HANDLE_VALUE) {
-            return false;
+        HANDLE hChildStdoutRd, hChildStdoutWr;
+        if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)) {
+            std::cerr << "CreatePipe failed: " << GetLastError() << std::endl;
+            return output;
         }
 
-        pe32.dwSize = sizeof(PROCESSENTRY32);
-
-        if (!Process32First(hProcessSnap, &pe32)) {
-            CloseHandle(hProcessSnap);
-            return false;
+        // È·±£¶Á¶Ë²»±»¼Ì³Ğ
+        if (!SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0)) {
+            std::cerr << "SetHandleInformation failed: " << GetLastError() << std::endl;
+            return output;
         }
 
-        do {
-            std::string processName = pe32.szExeFile;
-            std::transform(processName.begin(), processName.end(), processName.begin(), ::tolower);
+        // ÉèÖÃ×Ó½ø³ÌµÄÆô¶¯ĞÅÏ¢
+        PROCESS_INFORMATION piProcInfo;
+        STARTUPINFO siStartInfo;
+        ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+        ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+        siStartInfo.cb = sizeof(STARTUPINFO);
+        siStartInfo.hStdError = hChildStdoutWr;
+        siStartInfo.hStdOutput = hChildStdoutWr;
+        siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
-            if (lowerName == processName) {
-                HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pe32.th32ProcessID);
-                if (hProcess != NULL) {
-                    TerminateProcess(hProcess, 0);
-                    CloseHandle(hProcess);
-                }
+        // ´´½¨×Ó½ø³Ì
+        BOOL bSuccess = CreateProcess(
+            NULL,          // Ó¦ÓÃ³ÌĞòÃû³Æ (Èç¹ûÎª NULL, ÔòÊ¹ÓÃÃüÁîĞĞ)
+            (LPSTR)path,   // ÃüÁîĞĞ
+            NULL,          // ½ø³Ì°²È«ÊôĞÔ
+            NULL,          // Ïß³Ì°²È«ÊôĞÔ
+            TRUE,          // ¼Ì³Ğ¾ä±ú
+            0,             // ´´½¨±êÖ¾
+            NULL,          // »·¾³±äÁ¿
+            NULL,          // µ±Ç°Ä¿Â¼
+            &siStartInfo,  // STARTUPINFO
+            &piProcInfo    // PROCESS_INFORMATION
+        );
+
+        if (!bSuccess) {
+            std::cerr << "CreateProcess failed: " << GetLastError() << std::endl;
+            CloseHandle(hChildStdoutWr);
+            CloseHandle(hChildStdoutRd);
+            return output;
+        }
+
+        // ¹Ø±Õ²»ĞèÒªµÄ¾ä±ú
+        CloseHandle(hChildStdoutWr);
+
+        // ¶ÁÈ¡×Ó½ø³ÌµÄÊä³ö
+        const int BUFFER_SIZE = 4096;
+        CHAR buffer[BUFFER_SIZE];
+        DWORD dwRead;
+        while (true) {
+            // ´Ó¹ÜµÀÖĞ¶ÁÈ¡Êı¾İ
+            bSuccess = ReadFile(hChildStdoutRd, buffer, BUFFER_SIZE, &dwRead, NULL);
+            if (!bSuccess || dwRead == 0) {
+                break;
             }
-        } while (Process32Next(hProcessSnap, &pe32));
 
-        CloseHandle(hProcessSnap);
-        return true;
-    }
-
-    /**
-     * @brief Set the Register Key In Current User object
-     * 
-     * @param subKey Registry Key Path
-     * @param valueName Register Key Name
-     * @param filePath value
-     * @return true 
-     * @return false 
-     */
-    bool SetRegisterKeyInCurrentUser(const char* subKey, const char* valueName, const char* filePath) {
-        HKEY hKey;
-        
-        // æ‰“å¼€æˆ–åˆ›å»ºæ³¨å†Œè¡¨å­é¡¹
-        long result = RegCreateKeyExA(HKEY_CURRENT_USER, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
-        if (result != ERROR_SUCCESS) {
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
+            // ½«¶ÁÈ¡µÄÊı¾İ±£´æµ½ vector ÖĞ
+            std::string line(buffer, dwRead);
+            output.push_back(line);
         }
 
-        // å†™å…¥é”®å€¼æ•°æ®
-        result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
-        if (result != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
+        // µÈ´ı×Ó½ø³ÌÍË³ö
+        WaitForSingleObject(piProcInfo.hProcess, INFINITE);
 
-        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
-        RegCloseKey(hKey);
+        // ¹Ø±Õ¾ä±ú
+        CloseHandle(piProcInfo.hProcess);
+        CloseHandle(piProcInfo.hThread);
+        CloseHandle(hChildStdoutRd);
 
-        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
-    }
-
-    /**
-     * @brief Set the Registry Key In Local Machine object
-     * 
-     * @param subKey Registry Key Path
-     * @param valueName Register Key Name
-     * @param filePath value
-     * @return true 
-     * @return false 
-     */
-    bool SetRegisterKeyInLocalMachine(const char* subKey, const char* valueName, const char* filePath) {
-        HKEY hKey;
-        
-        // æ‰“å¼€æˆ–åˆ›å»ºæ³¨å†Œè¡¨å­é¡¹
-        long result = RegCreateKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
-        if (result != ERROR_SUCCESS) {
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
-
-        // å†™å…¥é”®å€¼æ•°æ®
-        result = RegSetValueExA(hKey, valueName, 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), static_cast<DWORD>(strlen(filePath) + 1));
-        if (result != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
-
-        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
-        RegCloseKey(hKey);
-
-        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
+        return output;
     }
     
     /**
-     * @brief è·å– HKCU ä¸­çš„æ³¨å†Œè¡¨é”®å€¼
+     * @brief Catch Output of a Console Application / ²¶×½Ò»¸öÃüÁîĞĞ½ø³ÌµÄ¿ØÖÆÌ¨Êä³ö½á¹û
      * 
-     * @param path è¦è·å–çš„æ³¨å†Œè¡¨é”®å€¼è·¯å¾„
-     * @param name åå­—
-     * @return value (std::string)
-    */
-    std::string GetRegisterKeyValueInCurrentUser(std::string path, std::string name) {
-        HKEY hKey;
-        std::string value;
-
-        if (RegOpenKeyExA(HKEY_CURRENT_USER, path.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-            DWORD dataSize = 1024;
-            char data[1024];
-            DWORD type;
-
-            if (RegQueryValueExA(hKey, name.c_str(), NULL, &type, (LPBYTE)data, &dataSize) == ERROR_SUCCESS) {
-                value = std::string(data);
-            }
-
-            RegCloseKey(hKey);
-        }
-
-        return value;
-    }
-
-    /**
-     * @brief è·å– HKLM ä¸­çš„æ³¨å†Œè¡¨é”®å€¼
-     * 
-     * @param path è¦è·å–çš„æ³¨å†Œè¡¨é”®å€¼è·¯å¾„
-     * @param name åå­—
-     * @return value (std::string)
-    */
-    std::string GetRegisterKeyValueInLocalMachine(std::string path, std::string name) {
-        HKEY hKey;
-        std::string value;
-
-        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-            DWORD dataSize = 1024;
-            char data[1024];
-            DWORD type;
-
-            if (RegQueryValueExA(hKey, name.c_str(), NULL, &type, (LPBYTE)data, &dataSize) == ERROR_SUCCESS) {
-                value = std::string(data);
-            }
-
-            RegCloseKey(hKey);
-        }
-
-        return value;
-    }
-
-    /**
-     * @brief Get Location of procedure
-     * 
-     * @return Location (std::string)
-    */
-    std::string GetLocation(){
-        char buffer[MAX_PATH];
-        GetModuleFileName(NULL, buffer, MAX_PATH);
-        PathRemoveFileSpec(buffer);
-        std::string CurrentDir(buffer);
-
-        return CurrentDir;
-    }
-
-    /**
-     * @brief å°†æ³¨å†Œè¡¨ HKCU ä¸­ path è·¯å¾„çš„åä¸º name çš„æ³¨å†Œè¡¨é”®å€¼æ”¹ä¸º value
-     * 
-     * @param path è¦ä¿®æ”¹çš„æ³¨å†Œè¡¨é”®å€¼çš„è·¯å¾„
-     * @param name åå­—
-     * @param value ä¿®æ”¹åçš„é”®å€¼
-     * @return true 
-     * @return false 
+     * @param command You can input the name of application. / Òª²¶×½½á¹ûµÄÓ¦ÓÃ³ÌĞò
+     * @return std::vector<std::string>
      */
-    bool ModifyRegisterKeyValueInCurrentUser(std::string path, std::string name, std::string value) {
-        HKEY hKey;
-        
-        if (RegOpenKeyExA(HKEY_CURRENT_USER, path.c_str(), 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-            if (RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (const BYTE*)value.c_str(), (DWORD)(value.length() + 1)) == ERROR_SUCCESS) {
-                RegCloseKey(hKey);
-                return true;
-            }
-            
-            RegCloseKey(hKey);
-        }
-        
-        return false;
-    }
+    std::vector<std::string> CatchResultOfConsolePlanB(const char* path) {
+        std::vector<std::string> results;
 
-    /**
-     * @brief å°†æ³¨å†Œè¡¨ HKLM ä¸­ path è·¯å¾„çš„åä¸º name çš„æ³¨å†Œè¡¨é”®å€¼æ”¹ä¸º value
-     * 
-     * @param path è¦ä¿®æ”¹çš„æ³¨å†Œè¡¨é”®å€¼çš„è·¯å¾„
-     * @param name åå­—
-     * @param value ä¿®æ”¹åçš„é”®å€¼
-     * @return true 
-     * @return false 
-     */
-    bool ModifyRegisterKeyValueInLocalMachine(std::string path, std::string name, std::string value) {
-        HKEY hKey;
-        
-        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-            if (RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (const BYTE*)value.c_str(), (DWORD)(value.length() + 1)) == ERROR_SUCCESS) {
-                RegCloseKey(hKey);
-                return true;
-            }
-            
-            RegCloseKey(hKey);
-        }
-        
-        return false;
-    }
+        // ´´½¨ÄäÃû¹ÜµÀ
+        HANDLE hReadPipe, hWritePipe;
+        SECURITY_ATTRIBUTES saAttr;
+        saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+        saAttr.bInheritHandle = TRUE;
+        saAttr.lpSecurityDescriptor = NULL;
 
-    /**
-     * @brief åˆ é™¤ HKCU ä¸­ subKey è·¯å¾„ä¸‹çš„ valueName
-     * 
-     * @param subKey è·¯å¾„
-     * @param valueName æ³¨å†Œè¡¨é¡¹çš„åå­—
-     * @return true 
-     * @return false 
-     */
-    bool DeleteRegistryKeyInCurrentUser(const char* subKey, const char* valueName) {
-        HKEY hKey;
-        
-        // æ‰“å¼€æ³¨å†Œè¡¨å­é¡¹
-        long result = RegOpenKeyExA(HKEY_CURRENT_USER, subKey, 0, KEY_WRITE, &hKey);
-        if (result != ERROR_SUCCESS) {
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
+        if (!CreatePipe(&hReadPipe, &hWritePipe, &saAttr, 0)) {
+            std::cerr << "CreatePipe failed." << std::endl;
+            return results;
         }
 
-        // åˆ é™¤é”®å€¼æ•°æ®
-        result = RegDeleteValueA(hKey, valueName);
-        if (result != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
-
-        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
-        RegCloseKey(hKey);
-
-        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
-    }
-
-    /**
-     * @brief åˆ é™¤ HKLM ä¸­ subKey è·¯å¾„ä¸‹çš„ valueName
-     * 
-     * @param subKey è·¯å¾„
-     * @param valueName æ³¨å†Œè¡¨é¡¹çš„åå­—
-     * @return true 
-     * @return false 
-     */
-    bool DeleteRegistryKeyInLocalMachine(const char* subKey, const char* valueName) {
-        HKEY hKey;
-        
-        // æ‰“å¼€æ³¨å†Œè¡¨å­é¡¹
-        long result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, subKey, 0, KEY_WRITE, &hKey);
-        if (result != ERROR_SUCCESS) {
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
-
-        // åˆ é™¤é”®å€¼æ•°æ®
-        result = RegDeleteValueA(hKey, valueName);
-        if (result != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return false;  // æ³¨å†Œè¡¨æ“ä½œå¤±è´¥
-        }
-
-        // å…³é—­æ³¨å†Œè¡¨é”®å¥æŸ„
-        RegCloseKey(hKey);
-
-        return true;  // æˆåŠŸå®Œæˆæ³¨å†Œè¡¨æ“ä½œ
-    }
-
-    /**
-     * @brief æ·»åŠ è‡ªå¯é¡¹, path ä»…é™ HKCU å’Œ HKLM
-     * 
-     * @param path é™åˆ¶ä¸º HKCU å’Œ HKLM, åˆ†åˆ«åœ¨ HKCU å’Œ HKLM æ·»åŠ é”®å€¼
-     * @param name è‡ªå¯é¡¹çš„åå­—
-     * @param value è‡ªå¯é¡¹çš„é”®å€¼
-     * @return true 
-     * @return false 
-     */
-    bool AddAutoRun(std::string path, std::string name, std::string value){
-        bool result = false;
-        if (path == "HKCU" || path == "HKEY_CURRENT_USER"){
-            result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), value.c_str());
-        }
-        else if (path == "HKLM" || path == "HKEY_LOCAL_MACHINE"){
-            result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), value.c_str());
-        }
-
-        return result;
-    }
-
-    /**
-     * @brief æ·»åŠ  Explorer.exe çš„é™åˆ¶é¡¹ é»˜è®¤é”®å€¼ä¸º 1
-     * 
-     * @param path é™åˆ¶ä¸º HKCU å’Œ HKLM, åˆ†åˆ«åœ¨ HKCU å’Œ HKLM æ·»åŠ é”®å€¼
-     * @param name é™åˆ¶é¡¹çš„åå­—
-     * @return true 
-     * @return false 
-     */
-    bool AddExplorerRestrict(std::string path, std::string name){
-        bool result = false;
-        if (path == "HKCU" || path == "HKEY_CURRENT_USER"){
-            result = SetRegisterKeyInCurrentUser(AutoRun, name.c_str(), "1");
-        }
-        else if (path == "HKLM" || path == "HKEY_LOCAL_MACHINE"){
-            result = SetRegisterKeyInLocalMachine(AutoRun, name.c_str(), "1");
-        }
-        return result;
-    }
-
-    /**
-     * @brief åˆ é™¤æŒ‡å®šçš„æ–‡ä»¶
-     * 
-     * @param file æŒ‡å®šçš„æ–‡ä»¶
-     * @return true
-     * @return false
-     */
-    bool DeleteFiles(std::string file) {
-        const char* filename = file.c_str();
-        if (std::remove(filename) != 0) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-    /**
-     * @brief è¡¨ç¤ºå¯¹ procedure ç¨‹åºæ‰§è¡Œ file å‘½ä»¤è¡Œ,
-     * 
-     * Eg. æ¯”å¦‚è¯´æˆ‘æƒ³å¯¹ D:\\Compiler.exe æ‰§è¡Œ "-f Tester.cpp", é‚£ä¹ˆå°±å¯ä»¥è°ƒç”¨ Command("D:\\Compiler.exe", " -f Tester.cpp");
-     * 
-     * @param procedure 
-     * @param file 
-     */
-    void Command(const char* procedure, char *file){
-        STARTUPINFO si = {sizeof(si)};
+        // ÉèÖÃÆô¶¯ĞÅÏ¢
+        STARTUPINFOA si;
         PROCESS_INFORMATION pi;
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        si.hStdError = hWritePipe;
+        si.hStdOutput = hWritePipe;
+        si.dwFlags |= STARTF_USESTDHANDLES;
 
-        std::string TempStr;
-        TempStr.assign(file);
+        ZeroMemory(&pi, sizeof(pi));
 
-        LPSTR lpstr = reinterpret_cast<LPSTR>(file);
-
-        if (CreateProcess(procedure, lpstr, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)){
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
-        }
-    }
-
-    /**
-     * @brief æ£€æµ‹è¿›ç¨‹æ˜¯å¦å­˜åœ¨
-     * 
-     * @param processName æ˜ åƒåå­—
-     * @return true 
-     * @return false 
-     */
-    bool IsProcessRunning(const char* processName) {
-        HANDLE hProcessSnap;
-        PROCESSENTRY32 pe32;
-
-        hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hProcessSnap == INVALID_HANDLE_VALUE) {
-            return false;
+        // ´´½¨ĞÂ½ø³Ì
+        if (!CreateProcessA(NULL, const_cast<char*>(path), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
+            std::cerr << "CreateProcess failed." << std::endl;
+            CloseHandle(hReadPipe);
+            CloseHandle(hWritePipe);
+            return results;
         }
 
-        pe32.dwSize = sizeof(PROCESSENTRY32);
+        // ¹Ø±ÕĞ´Èë¶Ë¾ä±ú£¬ÒòÎª×Ó½ø³ÌÒÑ¾­¼Ì³ĞÁËËü
+        CloseHandle(hWritePipe);
 
-        if (!Process32First(hProcessSnap, &pe32)) {
-            CloseHandle(hProcessSnap);
-            return false;
-        }
+        const int bufferSize = 4096;
+        char buffer[bufferSize];
+        DWORD bytesRead;
 
-        do {
-            if (_stricmp(processName, pe32.szExeFile) == 0) {
-                CloseHandle(hProcessSnap);
-                return true;
+        // ¶ÁÈ¡¹ÜµÀÖĞµÄÊä³ö
+        while (ReadFile(hReadPipe, buffer, bufferSize - 1, &bytesRead, NULL) && bytesRead > 0) {
+            buffer[bytesRead] = '\0';
+            std::string output(buffer);
+            size_t pos = 0;
+            while ((pos = output.find('\n')) != std::string::npos) {
+                results.emplace_back(output.substr(0, pos));
+                output.erase(0, pos + 1);
             }
-        } while (Process32Next(hProcessSnap, &pe32));
-
-        CloseHandle(hProcessSnap);
-        return false;
-    }
-
-    /**
-     * @brief åˆ›å»ºä¸€ä¸ªåä¸º FileName çš„å¿«æ·æ–¹å¼
-     * 
-     * @param FileName 
-     * @param Description 
-     * @param IconPath 
-     * @param TargetPath 
-     * @return true 
-     * @return false 
-     */
-    bool CreateLNK(std::string FileName, std::string Description, std::string IconPath, std::string TargetPath) {
-        CoInitialize(NULL);
-
-        IShellLink* pShellLink;
-        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pShellLink);
-        if (SUCCEEDED(hres)) {
-            pShellLink->SetPath(TargetPath.c_str());
-            pShellLink->SetDescription(Description.c_str());
-            pShellLink->SetIconLocation(IconPath.c_str(), 0);
-
-            IPersistFile* pPersistFile;
-            hres = pShellLink->QueryInterface(IID_IPersistFile, (LPVOID*)&pPersistFile);
-            if (SUCCEEDED(hres)) {
-                std::wstring wsz = std::wstring(FileName.begin(), FileName.end());
-                hres = pPersistFile->Save(wsz.c_str(), TRUE);
-                pPersistFile->Release();
-            }
-
-            pShellLink->Release();
-        }
-
-        CoUninitialize();
-
-        return SUCCEEDED(hres);
-    }
-
-    /**
-     * @brief Open An Application with Admin Privileges.
-     * 
-     * @param file 
-     * @return true
-     * @return false
-     */
-    bool OpenApplicationAsAdmin(const char* file) {
-        SHELLEXECUTEINFO shExecInfo = {0};
-        shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-        shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-        shExecInfo.hwnd = NULL;
-        shExecInfo.lpVerb = "runas"; // This is what makes it run as admin
-        shExecInfo.lpFile = file;
-        shExecInfo.lpParameters = NULL;
-        shExecInfo.lpDirectory = NULL;
-        shExecInfo.nShow = SW_NORMAL;
-        shExecInfo.hInstApp = NULL;
-
-        return ShellExecuteEx(&shExecInfo);
-    }
-
-    /**
-     * @brief Catch Output of a Console Application
-     * 
-     * @param command You can input the name of application.
-     * @return std::string 
-     */
-    std::string CatchResultOfConsole(const char* command) {
-        std::array<char, 128> buffer;
-        std::string result;
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command, "r"), pclose);
-        if (!pipe) {
-            throw std::runtime_error("popen() failed!");
-        }
-        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
-        }
-        return result;
-    }
-    
-    /**
-     * @brief Open "Open File" Window
-     * 
-     * @return std::string
-     */
-    std::string OpenFileWindow(){
-        OPENFILENAME ofn;       // ç»“æ„ä½“ç”¨äºä¿å­˜æ–‡ä»¶å¯¹è¯æ¡†çš„ä¿¡æ¯
-        char szFile[260];       // ç”¨äºä¿å­˜é€‰æ‹©çš„æ–‡ä»¶è·¯å¾„
-
-        ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize = sizeof(ofn);
-        ofn.lpstrFile = szFile;
-        ofn.lpstrFile[0] = '\0';
-        ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = "All Files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-        // æ‰“å¼€æ–‡ä»¶å¯¹è¯æ¡†
-        GetOpenFileName(&ofn);
-
-        std::string OpenFile(szFile);
-
-        return OpenFile;
-    }
-
-    /**
-     * @brief è¯¥å‡½æ•°ä¸ºè¯»å– Hkey\path ä¸‹çš„æ‰€æœ‰é”®å€¼
-     * 
-     * @param Hkey 
-     * @param path
-     * @example 
-     *  auto* registryValues = GetRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run");
-        if (registryValues->first) {
-            std::cout << "Registry values:\n" << registryValues->second << std::endl;
-        }
-        delete registryValues;
-     * @return std::pair<bool, std::string>* å…¶ä¸­ bool ä¸ºè·å–æ˜¯å¦æˆåŠŸ std::string ä¸ºé”®å€¼ å¦‚æœå¤±è´¥åˆ™ä¸ºç©º
-     */
-    std::pair<bool, std::string>* GetRegistryKey(HKEY Hkey, const char* path) {
-        HKEY hKey;
-        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
-        if (lResult != ERROR_SUCCESS) {
-            return new std::pair<bool, std::string>(false, "");
-        }
-
-        std::string allValues;
-        DWORD index = 0;
-        char valueName[256];
-        DWORD valueNameSize = sizeof(valueName);
-        BYTE data[1024];
-        DWORD dataSize = sizeof(data);
-        DWORD type;
-
-        while (RegEnumValue(hKey, index, valueName, &valueNameSize, NULL, &type, data, &dataSize) == ERROR_SUCCESS) {
-            if (type == REG_SZ) {
-                allValues += std::string(valueName) + "=" + std::string(reinterpret_cast<char*>(data)) + "\n";
-            }
-            index++;
-            valueNameSize = sizeof(valueName);
-            dataSize = sizeof(data);
-        }
-
-        RegCloseKey(hKey);
-        return new std::pair<bool, std::string>(true, allValues);
-    }
-    /**
-     * @brief è¯¥å‡½æ•°ä¸ºè¯»å– Hkey\path ä¸‹çš„ name é¡¹ 
-     * 
-     * @param Hkey 
-     * @param path 
-     * @param name 
-     * @example
-     *  auto registryExisted = IfRegistryKeyExisted(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
-        if (registryExisted.first) {
-            std::cout << "Registry value: " << registryExisted.second << std::endl;
-        }
-     * @return std::pair<bool, std::string> å…¶ä¸­ bool ä¸ºè·å–çš„æˆåŠŸæˆ–å¤±è´¥, std::string ä¸ºé”®å€¼ å¦‚æœè·å–å¤±è´¥åˆ™ä¸ºç©º
-     */
-    std::pair<bool, std::string> IfRegistryKeyExisted(HKEY Hkey, const char* path, const char* name) {
-        HKEY hKey;
-        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
-        if (lResult != ERROR_SUCCESS) {
-            return std::make_pair(false, "");
-        }
-
-        BYTE data[1024];
-        DWORD dataSize = sizeof(data);
-        DWORD type;
-        lResult = RegQueryValueEx(hKey, name, NULL, &type, data, &dataSize);
-        if (lResult != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return std::make_pair(false, "");
-        }
-
-        std::string value = std::string(reinterpret_cast<char*>(data));
-        RegCloseKey(hKey);
-        return std::make_pair(true, value);
-    }
-
-    /**
-     * @brief è¯¥å‡½æ•°ä¸º è¯»å–pathä¸‹çš„æ‰€æœ‰æ–‡ä»¶
-     * 
-     * @param path 
-     * @example
-     *  auto* fileList = LoopPath("C:\\Windows");
-        if (fileList) {
-            for (const auto& file : *fileList) {
-                std::cout << "File: " << file.first << ", Type: " << file.second << std::endl;
-            }
-            delete fileList;
-        }
-     * @return std::vector<std::pair<std::string, std::string>>* å…¶ä¸­ ç¬¬ä¸€ä¸ª std::string ä¸ºæ–‡ä»¶å, ç¬¬äºŒä¸ª std::string ä¸ºæ–‡ä»¶ç±»å‹
-     */
-    std::vector<std::pair<std::string, std::string>>* LoopPath(const char* path) {
-        std::string searchPath = std::string(path) + "\\*";
-        WIN32_FIND_DATAA findData;
-        HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
-
-        if (hFind == INVALID_HANDLE_VALUE) {
-            return nullptr;
-        }
-
-        auto* result = new std::vector<std::pair<std::string, std::string>>();
-        do {
-            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                result->emplace_back(findData.cFileName, "Directory");
-            } else {
-                std::string fileName = findData.cFileName;
-                size_t dotPos = fileName.rfind('.');
-                std::string fileType = (dotPos != std::string::npos) ? fileName.substr(dotPos + 1) : "";
-                result->emplace_back(fileName, fileType);
-            }
-        } while (FindNextFileA(hFind, &findData) != 0);
-
-        FindClose(hFind);
-        return result;
-    }
-
-    /**
-     * @brief è¯¥å‡½æ•°ä¸º è¯»å– Hkey\path ä¸‹çš„æ‰€æœ‰é¡¹ æ˜¯å¦å­˜åœ¨ SpecialKey è¿™ä¸€é¡¹
-     * 
-     * @param Hkey 
-     * @param path 
-     * @param SpecialKey 
-     * @example
-     *  auto* particularKey = ParticularRegistryKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", "WallpaperEngine");
-        if (!particularKey->first.empty()) {
-            std::cout << "Registry path: " << particularKey->first << ", Value: " << particularKey->second << std::endl;
-        }
-        delete particularKey;
-     * @return std::pair<std::string, std::string>* ç¬¬ä¸€ä¸ª std::string è¿”å›æ³¨å†Œè¡¨ç›®å½•, ç¬¬äºŒä¸ª std::string ä¸ºé”®å€¼
-     */
-    std::pair<std::string, std::string>* ParticularRegistryKey(HKEY Hkey, const char* path, const char* SpecialKey) {
-        HKEY hKey;
-        LONG lResult = RegOpenKeyEx(Hkey, path, 0, KEY_READ, &hKey);
-        if (lResult != ERROR_SUCCESS) {
-            return new std::pair<std::string, std::string>("", "");
-        }
-
-        BYTE data[1024];
-        DWORD dataSize = sizeof(data);
-        DWORD type;
-        lResult = RegQueryValueEx(hKey, SpecialKey, NULL, &type, data, &dataSize);
-        if (lResult != ERROR_SUCCESS) {
-            RegCloseKey(hKey);
-            return new std::pair<std::string, std::string>("", "");
-        }
-
-        std::string value = std::string(reinterpret_cast<char*>(data));
-        RegCloseKey(hKey);
-        return new std::pair<std::string, std::string>(std::string(path), value);
-    }
-
-    /**
-     * @brief æŠŠ FileOrigin æ‹·è´åˆ° FileDestination
-     * 
-     * @param FileOrigin è¦æ‹·è´çš„æ–‡ä»¶, è¦æ±‚æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
-     * @param FileDestination æ‹·è´çš„ç»ˆç‚¹, åŒæ ·æ˜¯è·¯å¾„å¸¦æ–‡ä»¶å
-     * @param IfCoveredWhenExist å½“ IfCoveredWhenExist ä¸º false æ—¶, å³ å½“åŒåæ–‡ä»¶å­˜åœ¨æ—¶, ä¸è¦†ç›–, åä¹‹äº¦ç„¶
-     * @return bool æ‹·è´æˆåŠŸè¿”å› trueï¼Œå¤±è´¥è¿”å› false
-     */
-    bool UpdatedCopyFiles(const char* FileOrigin, const char* FileDestination, bool IfCoveredWhenExist) {
-        // æ£€æŸ¥æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
-        struct stat buffer;
-        if (stat(FileOrigin, &buffer) != 0) {
-            std::cerr << "æºæ–‡ä»¶ " << FileOrigin << " ä¸å­˜åœ¨ã€‚" << std::endl;
-            return false;
-        }
-
-        // æ£€æŸ¥ç›®æ ‡æ–‡ä»¶æ˜¯å¦å­˜åœ¨
-        if (stat(FileDestination, &buffer) == 0 && !IfCoveredWhenExist) {
-            std::cerr << "ç›®æ ‡æ–‡ä»¶ " << FileDestination << " å·²å­˜åœ¨ï¼Œä¸”ä¸å…è®¸è¦†ç›–ã€‚" << std::endl;
-            return false;
-        }
-
-        // æ‰“å¼€æºæ–‡ä»¶
-        FILE* sourceFile = fopen(FileOrigin, "rb");
-        if (sourceFile == nullptr) {
-            std::cerr << "æ— æ³•æ‰“å¼€æºæ–‡ä»¶ " << FileOrigin << std::endl;
-            return false;
-        }
-
-        // æ‰“å¼€ç›®æ ‡æ–‡ä»¶
-        FILE* destFile = fopen(FileDestination, "wb");
-        if (destFile == nullptr) {
-            std::cerr << "æ— æ³•æ‰“å¼€ç›®æ ‡æ–‡ä»¶ " << FileDestination << std::endl;
-            fclose(sourceFile);
-            return false;
-        }
-
-        // ç¼“å†²åŒºå¤§å°
-        const size_t bufferSize = 4096;
-        char bufferData[bufferSize];
-        size_t bytesRead;
-
-        // é€å—å¤åˆ¶æ–‡ä»¶å†…å®¹
-        while ((bytesRead = fread(bufferData, 1, bufferSize, sourceFile)) > 0) {
-            if (fwrite(bufferData, 1, bytesRead, destFile) != bytesRead) {
-                std::cerr << "å†™å…¥ç›®æ ‡æ–‡ä»¶æ—¶å‡ºé”™ã€‚" << std::endl;
-                fclose(sourceFile);
-                fclose(destFile);
-                return false;
+            if (!output.empty()) {
+                results.emplace_back(output);
             }
         }
 
-        // å…³é—­æ–‡ä»¶
-        fclose(sourceFile);
-        fclose(destFile);
+        // µÈ´ı½ø³Ì½áÊø
+        WaitForSingleObject(pi.hProcess, INFINITE);
 
-        std::cout << "æ–‡ä»¶å¤åˆ¶æˆåŠŸï¼Œä» " << FileOrigin << " åˆ° " << FileDestination << std::endl;
-        return true;
+        // ¹Ø±Õ¾ä±ú
+        CloseHandle(hReadPipe);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        return results;
     }
+
 }

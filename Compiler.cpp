@@ -1,32 +1,47 @@
 #include "Oxygen.h"
 #include "cmdline.h"
 #include <fstream>
+#include <cctype>
+#include <regex>
+#include <chrono>
+#include <format>
+#include <variant>
+#include <unordered_map>
+#include <optional>
 
 using Oxygen::OutputTime;
+
+const std::string DefaultStd = "17";
+static std::string Standard = "-1";
 
 std::ofstream OutputLog("Output-cmdline.log", std::ios::out | std::ios::app);
 std::ifstream ReadOptions;
 
 std::string CompilerPath, WindresPath, ResourceFile, WindresLine;
-bool RunSound = false;
-bool AutoCurrectSyntax = true;
 std::string FinalCommandLine;
 std::string MediaPath;
-bool SelfUse = false; // ç”¨äºç»™ Oxygen.cpp æ·»åŠ ä¸€é•¿ä¸²å‚æ•°
+std::string AdditionalOption;
+std::string Output;
+
+bool RunSound = false;
+bool AutoCurrectSyntax = true;
+bool SelfUse = false; // ÓÃÓÚ¸ø Oxygen.cpp Ìí¼ÓÒ»³¤´®²ÎÊı
 bool CheckSyntax = false;
 bool DisplayAllWarnings = false;
 bool Debug = true;
 bool GUI = false;
 // bool EasyX = false;
 
-#define INFO 1
-#define WARN 2
-#define ERROR 3
-#define FATAL 4
+std::unordered_map<std::string, std::optional<std::string>> configMap;
 
-std::string Output;
+enum class LogLevel{
+    Info = 1,
+    Warn = 2,
+    Error = 3,
+    Fatal = 4
+};
 
-void WriteLogToFile(int Level, const char* message);
+void WriteLogToFile(LogLevel Level, const char* message);
 
 std::string BooleanOutput(bool b1){
     return b1 ? "true" : "false";
@@ -36,21 +51,97 @@ void OutputCurrentTime(){
     OutputLog << "[", OutputTime(OutputLog), OutputLog << "] ";
 }
 
+std::string ToLowercase(const std::string& str){
+    std::string result = str;
+    for (char& c : result){
+        c = std::tolower(c);
+    }
+    return result;
+}
+
 std::pair<bool, DWORD> RunSoundA(){
-    // æ’­æ”¾çš„éŸ³é¢‘æ–‡ä»¶è·¯å¾„
+    // ²¥·ÅµÄÒôÆµÎÄ¼şÂ·¾¶
 	const char* audioFilePath = MediaPath.c_str();
 
-    // æ‰“å¼€å¹¶æ’­æ”¾éŸ³é¢‘æ–‡ä»¶
+    // ´ò¿ª²¢²¥·ÅÒôÆµÎÄ¼ş
     if (PlaySoundA(audioFilePath, NULL, SND_FILENAME | SND_ASYNC)){
         Sleep(1.5 * 1000);
 
-        // åœæ­¢éŸ³é¢‘æ’­æ”¾
+        // Í£Ö¹ÒôÆµ²¥·Å
         PlaySoundA(NULL, NULL, 0);
 
         return std::make_pair(true, 0);
     }
     DWORD ErrorCode = GetLastError();
     return std::make_pair(false, ErrorCode);
+}
+
+static const char* GetErrorInfo(DWORD ErrorCode){
+    if (ErrorCode > 32) {
+        return "No Error here.";
+    }
+    switch (ErrorCode) {
+    case 0: {
+        return "The operating system is out of memory or resources.";
+    }
+    case ERROR_FILE_NOT_FOUND: {
+        return "The specified file was not found.";
+    }
+    case ERROR_PATH_NOT_FOUND: {
+        return "The specified path was not found.";
+    }
+    case ERROR_BAD_FORMAT: {
+        return "The .exe file is invalid (non-Win32 .exe or error in .exe image).";
+    }
+    case SE_ERR_ACCESSDENIED: {
+        return "The operating system denied access to the specified file.";
+    }
+    case SE_ERR_ASSOCINCOMPLETE: {
+        return "The file name association is incomplete or invalid.";
+    }
+    case SE_ERR_DDEBUSY: {
+        return "The DDE transaction could not be completed because other DDE transactions were being processed.";
+    }
+    case SE_ERR_DDEFAIL: {
+        return "The DDE transaction failed.";
+    }
+    case SE_ERR_DDETIMEOUT: {
+        return "The DDE transaction could not be completed because the request timed out.";
+    }
+    case SE_ERR_DLLNOTFOUND: {
+        return "The specified DLL was not found.";
+    }
+    case SE_ERR_NOASSOC: {
+        return "There is no application associated with the given file name extension. This error will also be returned if you attempt to print a file that is not printable.";
+    }
+    case SE_ERR_OOM: {
+        return "There was not enough memory to complete the operation.";
+    }
+    case SE_ERR_SHARE: {
+        return "A sharing violation occurred.";
+    }
+    default: {
+        return "Unknown Error.";
+    }
+    }
+    return "Unknown Error.";
+}
+
+std::variant<std::string, bool> RunSoundV(){
+    // ²¥·ÅµÄÒôÆµÎÄ¼şÂ·¾¶
+    const char* audioFilePath = MediaPath.c_str();
+
+    // ´ò¿ª²¢²¥·ÅÒôÆµÎÄ¼ş
+    if (PlaySoundA(audioFilePath, NULL, SND_FILENAME | SND_ASYNC)){
+        Sleep(1.5 * 1000);
+
+        // Í£Ö¹ÒôÆµ²¥·Å
+        PlaySoundA(NULL, NULL, 0);
+
+        return true;
+    }
+    DWORD ErrorCode = GetLastError();
+    return GetErrorInfo(ErrorCode);
 }
 
 void ReadOptionsFile(){
@@ -60,71 +151,71 @@ void ReadOptionsFile(){
         CompilerPath = "g++.exe ";
         WindresPath = "Windres.exe ";
         return;
-    }
+    }   
 
     while (std::getline(ReadOptions, WholeCommand)){
-        // std::cout << "Whole Command: " << WholeCommand << std::endl;
-        int div = WholeCommand.find('=');
-        Command = WholeCommand.substr(0, div);
-        if (Command[0] == '#')
-            continue;
-        // std::cout << "Command : " << Command << std::endl;
-        if (Command == "CompilerPath"){
-            CompilerPath = WholeCommand.substr(div + 1);
+        // ÏÈÈ¥³ı×¢ÊÍ '#'
+        std::regex commentRegex("#.*");
+        WholeCommand = std::regex_replace(WholeCommand, commentRegex, "");
+
+        // ÔÚ½øĞĞÕıÔòÆ¥Åä
+        std::regex pattern(R"((\w+)\s*=\s*(.+))");
+    
+        std::smatch matches;
+        if (std::regex_match(WholeCommand, matches, pattern)) {
+            Command = matches[1].str();
+            std::string value = matches[2].str();
+            configMap.insert( std::make_pair( ToLowercase( matches[1].str() ), matches[2].str() ) );
         }
-        else if (Command == "WindresPath"){
-            WindresPath = WholeCommand.substr(div + 1);
-        }
-        else if (Command == "RunSound"){
-            std::string temp = WholeCommand.substr(div + 1);
-            if (temp == "true" || temp == "TRUE" || temp == "True"){
-                RunSound = true;
-            }
-            else if (temp == "false" || temp == "FALSE" || temp == "False"){
-                RunSound = false;
-            }
-        }
-        else if (Command == "AutoCurrectSyntax"){  // è‡ªåŠ¨çº é”™
-            std::string temp = WholeCommand.substr(div + 1);
-            if (temp == "true" || temp == "TRUE" || temp == "True"){
-                AutoCurrectSyntax = true;
-            }
-            else if (temp == "false" || temp == "FALSE" || temp == "False"){
-                AutoCurrectSyntax = false;
-            }
-        }
-        else if (Command == "MediaPath"){
-            MediaPath = WholeCommand.substr(div + 1);
-            // std::cout << "Got Media!" << std::endl;
-            if (Debug)
-                std::cout << "MediaPath: " << MediaPath << std::endl;
-        }
-        else if (Command == "Debug"){
-            std::string temp = WholeCommand.substr(div + 1);
-            if (temp == "true" || temp == "TRUE" || temp == "True"){
-                Debug = true;
-            }
-            else if (temp == "false" || temp == "FALSE" || temp == "False"){
-                Debug = false;
-            }
-        }
+    }
+
+    CompilerPath = configMap["compilerpath"].value_or("g++.exe ");
+    WindresPath = configMap["windrespath"].value_or("Windres.exe ");
+    RunSound = ToLowercase(configMap["runsound"].value_or("false")) == "true";
+    AutoCurrectSyntax = ToLowercase(configMap["autocurrectsyntax"].value_or("true")) == "true";
+    MediaPath = configMap["mediapath"].value_or("C:\\Windows\\Media\\Windows Notify Messaging.wav");
+    Debug = ToLowercase(configMap["debug"].value_or("false")) == "true";
+    AdditionalOption = configMap["additionaloption"].value_or("");
+    // ¶ÔÓÚÊı×ÖĞèÒª¶îÍâµÄÒì³£²¶»ñ (std::stoi)
+    try{
+        Standard = configMap["standard"].value_or("17");
+    }
+    catch (const std::exception& e){
+        Output = std::format("Error Occurred when parsing standard number in options.txt: {}. Using default: C++{}", e.what(), DefaultStd);
+        WriteLogToFile(LogLevel::Warn, Output.c_str());
+        Standard = "17";
     }
     if (Debug){
+        std::cout << "--------- Raw Input ---------" << std::endl;
+        for (const auto& [key, value] : configMap){
+            std::cout << std::format("{}: |{}|", key, value.value_or("null")) << std::endl;
+        }
+        std::cout << "--------- Raw Input ---------" << std::endl;
+        std::cout << "Compiler Path: " << CompilerPath << std::endl;
+        std::cout << "Windres Path: " << WindresPath << std::endl;
+        std::cout << "Media Path: " << MediaPath << std::endl;
+        std::cout << "Standard: " << Standard << std::endl;
+        std::cout << "Default Standard: " << DefaultStd << std::endl;
         std::cout << "RunSound: " << BooleanOutput(RunSound) << std::endl;
         std::cout << "AutoCurrectSyntax: " << BooleanOutput(AutoCurrectSyntax) << std::endl;
+        std::cout << "Additional Compile Options: " << AdditionalOption << ", IsEmpty: " << AdditionalOption.empty() << std::endl;
     }
     Output = "Compiler Path: " + CompilerPath;
-    WriteLogToFile(INFO, Output.c_str());
+    WriteLogToFile(LogLevel::Info, Output.c_str());
     Output = "Windres Path: " + WindresPath;
-    WriteLogToFile(INFO, Output.c_str());
+    WriteLogToFile(LogLevel::Info, Output.c_str());
     Output = "Run Sound: " + BooleanOutput(RunSound);
-    WriteLogToFile(INFO, Output.c_str());
+    WriteLogToFile(LogLevel::Info, Output.c_str());
     Output = "Auto Currect Syntax: " + BooleanOutput(AutoCurrectSyntax);
-    WriteLogToFile(INFO, Output.c_str());
+    WriteLogToFile(LogLevel::Info, Output.c_str());
+    if (!AdditionalOption.empty()){
+        Output = "Additional Compile Options: " + AdditionalOption;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
+    }
 }
  
 void Currect(std::string& error, const char* request, const char* Wanted){
-    if (request == "Back"){
+    if (request == std::string("Back")){
         int position = error.rfind('.');
         std::string back = error.substr(position);
         if (back != Wanted){
@@ -132,13 +223,13 @@ void Currect(std::string& error, const char* request, const char* Wanted){
         }
         error = error.substr(0, position) + back;
     }
-    else if (request == "Suffix"){
+    else if (request == std::string("Suffix")){
         error += Wanted;
     }
 }
 
 void DeletePrefix(std::string& awa){
-    // åˆ é™¤ .\ å‰ç¼€
+    // É¾³ı .\ Ç°×º
     int pos = awa.find(".\\");
     if (pos != EOF){
         awa = awa[0] + awa.substr(pos + 2);
@@ -148,141 +239,174 @@ void DeletePrefix(std::string& awa){
     }
 }
 
-void WriteLogToFile(int Level, const char* message){
+void WriteLogToFile(LogLevel Level, const char* message){
     OutputLog << "[", OutputTime(OutputLog), OutputLog << "] ";
     std::string info = "[main/";
     switch (Level){
-        case INFO:
+        case LogLevel::Info:
             info += "INFO]";
             break;
-        case WARN:
+        case LogLevel::Warn:
             info += "WARN]";
             break;
-        case ERROR:
+        case LogLevel::Error:
             info += "ERROR]";
             break;
-        case FATAL:
+        case LogLevel::Fatal:
             info += "FATAL]";
             break;
     }
     OutputLog << info << " " << message << "\n";
 }
 
-int main(int argc, char *argv[]){
-    WriteLogToFile(INFO, "--------------- Launched ---------------");
-    WriteLogToFile(INFO, "[Compiler] Version 1.2.1.1");
+const std::string Version = "1.2.1.3";
 
-    std::string Location = Oxygen::GetLocation() + "\\options.txt";
-    ReadOptions.open(Location.c_str()); // æ‰“å¼€å½“å‰ç›®å½•ä¸‹çš„options.txtæ–‡ä»¶
+int main(int argc, char *argv[]){
+    WriteLogToFile(LogLevel::Info, "--------------- Launched ---------------");
+    std::string VersionInfo = "[Compiler] Version " + Version;
+    WriteLogToFile(LogLevel::Info, VersionInfo.c_str());
+    std::cout << VersionInfo << std::endl;
+
+    std::string Location = Oxygen::File::GetLocation() + "\\options.txt";
+    ReadOptions.open(Location.c_str()); // ´ò¿ªµ±Ç°Ä¿Â¼ÏÂµÄoptions.txtÎÄ¼ş
     ReadOptionsFile();
 
-    // è§£æå‘½ä»¤è¡Œå‚æ•°
+    if (argc == 2 && ToLowercase(std::string(argv[1])) == "--config"){
+        std::cout << "´ò¿ªÅäÖÃÎÄ¼ş: " << Location << std::endl;
+        Output = "´ò¿ªÅäÖÃÎÄ¼ş: " + Location;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
+        HINSTANCE result = ShellExecuteA(NULL, "open", "notepad.exe", Location.c_str(), NULL, SW_SHOWNORMAL);
+        INT_PTR resultValue = reinterpret_cast<INT_PTR>(result);
+        if (resultValue <= 32) {
+            std::cout << "ÎŞ·¨´ò¿ªÅäÖÃÎÄ¼ş: " << Location << std::endl;
+            Output = "ÎŞ·¨´ò¿ªÅäÖÃÎÄ¼ş: " + Location;
+            WriteLogToFile(LogLevel::Error, Output.c_str());
+            Output = "´íÎóĞÅÏ¢: " + std::string(GetErrorInfo(resultValue));
+            WriteLogToFile(LogLevel::Error, Output.c_str());
+        }
+        else{
+            std::cout << "ÒÑ³É¹¦´ò¿ªÅäÖÃÎÄ¼ş: " << Location << std::endl;
+            Output = "ÒÑ³É¹¦´ò¿ªÅäÖÃÎÄ¼ş: " + Location;
+            WriteLogToFile(LogLevel::Info, Output.c_str());
+        }
+        
+        WriteLogToFile(LogLevel::Info, "--------------- Stoped! ---------------");
+        OutputLog.close();
+        return 0;
+    }
+
+    // ½âÎöÃüÁîĞĞ²ÎÊı
     cmdline::parser parser;
-    parser.add<std::string>("file", 'f', "è¾“å…¥æ–‡ä»¶", true);
-    parser.add<std::string>("standard", 's', "C++ç¼–è¯‘æ ‡å‡†(ä»…è¾“å…¥æ•°å­—)", false, "11", cmdline::oneof<std::string>("11", "14", "17", "20", "23"));
-    parser.add<bool>("help", 'h', "æ˜¾ç¤ºå¸®åŠ©ä¿¡æ¯", false, false);
-    parser.add<std::string>("resource", 'r', "èµ„æºæ–‡ä»¶", false, "\0");
-    parser.add<std::string>("customfile", 'i', "è‡ªå®šä¹‰.cppæ–‡ä»¶", false, "\0");
-    parser.add<int>("optimize", 'o', "ä¼˜åŒ–ç­‰çº§", false, 0, cmdline::oneof<int>(0, 1, 2, 3, 4));
-    parser.add<std::string>("link", 'l', "éœ€è¦é“¾æ¥çš„åº“", false, "\0");
+    parser.add<std::string>("file", 'f', "ÊäÈëÎÄ¼ş", true);
+    parser.add<std::string>("standard", 's', "C++±àÒë±ê×¼(½öÊäÈëÊı×Ö)", false,( (Standard == "-1") ? DefaultStd : Standard), cmdline::oneof<std::string>("11", "14", "17", "20", "23"));
+    parser.add<bool>("help", 'h', "ÏÔÊ¾°ïÖúĞÅÏ¢", false, false);
+    parser.add<std::string>("resource", 'r', "×ÊÔ´ÎÄ¼ş", false, "\0");
+    parser.add<std::string>("customfile", 'i', "×Ô¶¨Òå.cppÎÄ¼ş", false, "\0");
+    parser.add<int>("optimize", 'o', "ÓÅ»¯µÈ¼¶", false, 0, cmdline::oneof<int>(0, 1, 2, 3, 4));
+    parser.add<std::string>("link", 'l', "ĞèÒªÁ´½ÓµÄ¿â", false, "\0");
 
-    // parser.add<bool>("checksyntax", 'c', "åªæ£€æµ‹è¯­æ³•é”™è¯¯", false, false);
-    parser.add("checksyntax", 'c', "åªæ£€æµ‹è¯­æ³•é”™è¯¯");
+    // parser.add<bool>("checksyntax", 'c', "Ö»¼ì²âÓï·¨´íÎó", false, false);
+    parser.add("checksyntax", 'c', "Ö»¼ì²âÓï·¨´íÎó");
 
-    // parser.add<bool>("wall", 'w', "æ˜¾ç¤ºæ‰€æœ‰è­¦å‘Š", false, false);
-    parser.add("wall", 'w', "æ˜¾ç¤ºæ‰€æœ‰è­¦å‘Š");
+    // parser.add<bool>("wall", 'w', "ÏÔÊ¾ËùÓĞ¾¯¸æ", false, false);
+    parser.add("wall", 'w', "ÏÔÊ¾ËùÓĞ¾¯¸æ");
 
-    parser.add<std::string>("customparam", 'y', "è‡ªå®šä¹‰å‚æ•°(å†™åœ¨åŒä¸€è¡Œä¸”ä¿å­˜åœ¨CustomizedParam.txtä¸­)", false, "\0");
+    parser.add<std::string>("customparam", 'y', "×Ô¶¨Òå²ÎÊı(Ğ´ÔÚÍ¬Ò»ĞĞÇÒ±£´æÔÚCustomizedParam.txtÖĞ)", false, "\0");
 
-    // parser.add<bool>("GUI", 'g', "ç¼–è¯‘æˆGUIç¨‹åº", false, false);
-    parser.add("GUI", 'g', "ç¼–è¯‘æˆGUIç¨‹åº");
-    // parser.add<bool>("EasyX", 'l', "ä½¿ç”¨EasyXåº“", false, false);
-    // parser.add("EasyX", 'l', "ä½¿ç”¨EasyXåº“");
-    parser.add("Debug", 'd', "è°ƒè¯•æ—¥å¿—è¾“å‡º");
+    // parser.add<bool>("GUI", 'g', "±àÒë³ÉGUI³ÌĞò", false, false);
+    parser.add("GUI", 'g', "±àÒë³ÉGUI³ÌĞò");
+    // parser.add<bool>("EasyX", 'l', "Ê¹ÓÃEasyX¿â", false, false);
+    // parser.add("EasyX", 'l', "Ê¹ÓÃEasyX¿â");
+    parser.add("Debug", 'd', "µ÷ÊÔÈÕÖ¾Êä³ö");
 
     bool ok = parser.parse(argc, argv);
 
     Debug = parser.exist("Debug");
+    // OpenConfigFile = parser.exist("config");
     // std::cout << "Debug: " << Debug << std::endl;
 
     if (!ok || parser.get<bool>("help")) {
-        // è§£æå¤±è´¥æˆ–è¯·æ±‚å¸®åŠ©æ—¶ï¼Œè¾“å‡ºå¸®åŠ©ä¿¡æ¯
+        // ½âÎöÊ§°Ü»òÇëÇó°ïÖúÊ±£¬Êä³ö°ïÖúĞÅÏ¢
         std::cout << parser.error_full() << std::endl;
-        std::cout << parser.usage() << std::endl;
-        Oxygen::PrintColor("red");
-        std::cout << "æ³¨æ„: ç”±äºç¨‹åºä½¿ç”¨çš„å‘½ä»¤è¡Œè§£æåº“é™åˆ¶, åœ¨è¾“å…¥æ–‡ä»¶æ—¶ä¸è¦å¸¦ç©ºæ ¼" << std::endl;
+        std::cout << parser.usage();
+        std::cout << std::format("      --config         ´ò¿ª {} µÄÅäÖÃÎÄ¼ş", std::string(argv[0])) << std::endl << std::endl;
+
+        ConsoleColor::SetColor(ConsoleColor::Red, ConsoleColor::Black);
+        std::cout << "×¢Òâ: ÓÉÓÚ³ÌĞòÊ¹ÓÃµÄÃüÁîĞĞ½âÎö¿âÏŞÖÆ, ÔÚÊäÈëÎÄ¼şÊ±²»Òª´ø¿Õ¸ñ" << std::endl;
         std::cout << "Careful: Due to the limitation of the command line parsing library used by the program, do not include spaces when inputting the file" << std::endl;
-        Oxygen::PrintColor("white");
+        ConsoleColor::SetColor(ConsoleColor::White, ConsoleColor::Black);
+
         return 1;
     }
 
-    std::cout << "[Compiler] Version 1.2.1.1" << std::endl;
-
-    // å› ä¸ºå‡½æ•°å¾ˆéš¾è¯†åˆ«ç©ºæ ¼ é‚£ä¹ˆä¸€å¾‹æ·»åŠ å¼•å·
+    // ÒòÎªº¯ÊıºÜÄÑÊ¶±ğ¿Õ¸ñ ÄÇÃ´Ò»ÂÉÌí¼ÓÒıºÅ
     std::string InputFile = "\"" + parser.get<std::string>("file") + "\"";
     std::string Standard = "c++" + parser.get<std::string>("standard");
-    std::string LinkFile = "\0";
-    Output = "è¾“å…¥æ–‡ä»¶: " + InputFile + ", æ ‡å‡†: " + Standard;
-    WriteLogToFile(INFO, Output.c_str());
+    std::string LinkFile = "";
+    std::string Resource = "\0", CustomFile = "\0", ResourceName = "\0";
+
+    // std::string_view InputFileView, StandardView, LinkFileView, ResourceView, CustomFileView, ResourceNameView;
+
+    Output = "ÊäÈëÎÄ¼ş: " + InputFile + ", ±ê×¼: " + Standard;
+    WriteLogToFile(LogLevel::Info, Output.c_str());
     if (Debug){
-        std::cout << "è¾“å…¥æ–‡ä»¶: " << InputFile << std::endl;
-        std::cout << "æ ‡å‡†: C++" << parser.get<std::string>("standard") << std::endl;
+        std::cout << "ÊäÈëÎÄ¼ş: " << InputFile << std::endl;
+        std::cout << "±ê×¼: C++" << parser.get<std::string>("standard") << std::endl;
     }
     DeletePrefix(InputFile);
-    // çº æ­£åç¼€
-    if (InputFile.find('.') == EOF && AutoCurrectSyntax){
-        // å¤ªè¿‡åˆ†äº† è¿åç¼€éƒ½æ²¡æœ‰
-        Oxygen::PrintColor("red");
-        std::cout << "æœªæ£€æµ‹åˆ°æ–‡ä»¶åç¼€! è‡ªåŠ¨æ·»åŠ åç¼€.cpp!" << std::endl;
-        Oxygen::PrintColor("white");
-        // å› ä¸ºé»˜è®¤åŠ å¼•å·äº† æ‰€ä»¥è¦å»æ‰
+    // ¾ÀÕıºó×º
+    if (static_cast<int>(InputFile.find('.')) == EOF && AutoCurrectSyntax){
+        // Ì«¹ı·ÖÁË Á¬ºó×º¶¼Ã»ÓĞ
+        ConsoleColor::SetColor(ConsoleColor::Red);
+        std::cout << "Î´¼ì²âµ½ÎÄ¼şºó×º! ×Ô¶¯Ìí¼Óºó×º.cpp!" << std::endl;
+        ConsoleColor::SetColor(ConsoleColor::White);
+        // ÒòÎªÄ¬ÈÏ¼ÓÒıºÅÁË ËùÒÔÒªÈ¥µô
         InputFile = InputFile.substr(0, InputFile.length() - 1);
         InputFile += ".cpp\"";
-        Output = "æœªæ£€æµ‹åˆ°æ–‡ä»¶åç¼€! å·²è‡ªåŠ¨æ›´æ­£ä¸º: " + InputFile;
-        WriteLogToFile(WARN, Output.c_str());
+        Output = "Î´¼ì²âµ½ÎÄ¼şºó×º! ÒÑ×Ô¶¯¸üÕıÎª: " + InputFile;
+        WriteLogToFile(LogLevel::Warn, Output.c_str());
     }
-    else if (InputFile.find(".cpp") == EOF && AutoCurrectSyntax){
-        Oxygen::PrintColor("red");
-        std::cout << "è¾“å…¥æ–‡ä»¶åç¼€åé”™è¯¯ï¼Œè‡ªåŠ¨æ›´æ­£ä¸º.cpp!" << std::endl;
-        Oxygen::PrintColor("white");
+    else if (static_cast<int>(InputFile.find(".cpp")) == EOF && AutoCurrectSyntax){
+        ConsoleColor::SetColor(ConsoleColor::Red);
+        std::cout << "ÊäÈëÎÄ¼şºó×ºÃû´íÎó£¬×Ô¶¯¸üÕıÎª.cpp!" << std::endl;
+        ConsoleColor::SetColor(ConsoleColor::White);
         Currect(InputFile, "Back", ".cpp");
         InputFile += "\"";
-        Output = "æ£€æµ‹åˆ°è¾“å…¥çš„æºä»£ç æ–‡ä»¶åç¼€é”™è¯¯! å·²è‡ªåŠ¨æ›´æ­£ä¸º: " + InputFile;
-        WriteLogToFile(WARN, Output.c_str());
+        Output = "¼ì²âµ½ÊäÈëµÄÔ´´úÂëÎÄ¼şºó×º´íÎó! ÒÑ×Ô¶¯¸üÕıÎª: " + InputFile;
+        WriteLogToFile(LogLevel::Warn, Output.c_str());
     }
 
-    std::string Resource = "\0", CustomFile = "\0", ResourceName = "\0";
     int OptimizeLevel = 0;
     if (parser.get<std::string>("resource") != "\0"){
         Resource = "\"" + parser.get<std::string>("resource") + "\"";
-        Output = "èµ„æºæ–‡ä»¶: " + Resource;
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "×ÊÔ´ÎÄ¼ş: " + Resource;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
 
         if (!Resource.empty()){
             if (Debug)
-                std::cout << "èµ„æºæ–‡ä»¶: " << Resource << std::endl;
-            // å…ˆè¿›è¡Œä¿®æ­£
+                std::cout << "×ÊÔ´ÎÄ¼ş: " << Resource << std::endl;
+            // ÏÈ½øĞĞĞŞÕı
             DeletePrefix(Resource);
-            if (Resource.find(".rc") == EOF && AutoCurrectSyntax){
-                Oxygen::PrintColor("red");
-                std::cout << "èµ„æºæ–‡ä»¶åç¼€åé”™è¯¯ï¼Œè‡ªåŠ¨æ›´æ­£ä¸º.rc!" << std::endl;
-                Oxygen::PrintColor("white");
+            if (static_cast<int>(Resource.find(".rc")) == EOF && AutoCurrectSyntax){
+                ConsoleColor::SetColor(ConsoleColor::Red);
+                std::cout << "×ÊÔ´ÎÄ¼şºó×ºÃû´íÎó£¬×Ô¶¯¸üÕıÎª.rc!" << std::endl;
+                ConsoleColor::SetColor(ConsoleColor::White);
                 Currect(Resource, "Back", ".rc");
                 Resource += "\"";
-                Output = "æ£€æµ‹åˆ°è¾“å…¥çš„èµ„æºæ–‡ä»¶åç¼€é”™è¯¯! å·²è‡ªåŠ¨æ›´æ­£ä¸º: " + InputFile;
-                WriteLogToFile(WARN, Output.c_str());
+                Output = "¼ì²âµ½ÊäÈëµÄ×ÊÔ´ÎÄ¼şºó×º´íÎó! ÒÑ×Ô¶¯¸üÕıÎª: " + InputFile;
+                WriteLogToFile(LogLevel::Warn, Output.c_str());
             }
             ResourceName = Resource.substr(0, Resource.find("."));
             WindresLine = WindresPath + " " + Resource + " -O coff " + ResourceName + ".o\" 2> WindresLog.txt";
             std::cout << "WindresLine: " << WindresLine << std::endl;
             if (!Debug){
                 if (!std::system(WindresLine.c_str())){
-                    Output = "èµ„æºæ–‡ä»¶ç¼–è¯‘æˆåŠŸ!";
-                    WriteLogToFile(INFO, Output.c_str());
+                    Output = "×ÊÔ´ÎÄ¼ş±àÒë³É¹¦!";
+                    WriteLogToFile(LogLevel::Info, Output.c_str());
                 }
                 else{
-                    Output = "èµ„æºæ–‡ä»¶ç¼–è¯‘å¤±è´¥!";
-                    WriteLogToFile(ERROR, Output.c_str());
+                    Output = "×ÊÔ´ÎÄ¼ş±àÒëÊ§°Ü!";
+                    WriteLogToFile(LogLevel::Error, Output.c_str());
                 }   
             }
             if (Debug){
@@ -290,35 +414,35 @@ int main(int argc, char *argv[]){
                 std::cout << Output << std::endl;
             }
             Output = "Windres Compilation Command Line: " + WindresLine;
-            WriteLogToFile(INFO, Output.c_str());
+            WriteLogToFile(LogLevel::Info, Output.c_str());
         }
     }
     if (parser.get<std::string>("customfile") != "\0"){
         CustomFile = "\"" + parser.get<std::string>("customfile") + "\"";
         if (Debug)
-            std::cout << "è‡ªå®šä¹‰æ–‡ä»¶: " << parser.get<std::string>("customfile") << std::endl;
-        Output = "è‡ªå®šä¹‰æ–‡ä»¶: " + CustomFile;
-        WriteLogToFile(INFO, Output.c_str());
-        if (CustomFile.find(".cpp") == EOF && AutoCurrectSyntax){
-            Oxygen::PrintColor("red");
-            std::cout << "è¾“å…¥çš„è‡ªå®šä¹‰æ–‡ä»¶åç¼€åé”™è¯¯ï¼Œè‡ªåŠ¨æ›´æ­£ä¸º.cpp!" << std::endl;
-            Oxygen::PrintColor("white");
+            std::cout << "×Ô¶¨ÒåÎÄ¼ş: " << parser.get<std::string>("customfile") << std::endl;
+        Output = "×Ô¶¨ÒåÎÄ¼ş: " + CustomFile;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
+        if (static_cast<int>(CustomFile.find(".cpp")) == EOF && AutoCurrectSyntax){
+            ConsoleColor::SetColor(ConsoleColor::Red);
+            std::cout << "ÊäÈëµÄ×Ô¶¨ÒåÎÄ¼şºó×ºÃû´íÎó£¬×Ô¶¯¸üÕıÎª.cpp!" << std::endl;
+            ConsoleColor::SetColor(ConsoleColor::White);
             Currect(CustomFile, "Back", ".cpp");
             CustomFile += "\"";
-            Output = "æ£€æµ‹åˆ°è¾“å…¥è‡ªå®šä¹‰æ–‡ä»¶åç¼€é”™è¯¯! å·²è‡ªåŠ¨æ›´æ­£ä¸º: " + CustomFile;
-            WriteLogToFile(WARN, Output.c_str());
+            Output = "¼ì²âµ½ÊäÈë×Ô¶¨ÒåÎÄ¼şºó×º´íÎó! ÒÑ×Ô¶¯¸üÕıÎª: " + CustomFile;
+            WriteLogToFile(LogLevel::Warn, Output.c_str());
         }
         if (CustomFile == "\"Oxygen.cpp\""){
             SelfUse = true;
-            WriteLogToFile(INFO, "Oxygen.cpp detected");
+            WriteLogToFile(LogLevel::Info, "Oxygen.cpp detected");
         }
     }
     if (std::to_string(parser.get<int>("optimize")) != "0"){
         OptimizeLevel = parser.get<int>("optimize");
-        Output = "ä¼˜åŒ–ç­‰çº§: " + std::to_string(OptimizeLevel);
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "ÓÅ»¯µÈ¼¶: " + std::to_string(OptimizeLevel);
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "ä¼˜åŒ–ç­‰çº§: " << parser.get<int>("optimize") << std::endl;
+            std::cout << "ÓÅ»¯µÈ¼¶: " << parser.get<int>("optimize") << std::endl;
     }
     std::string CustomParam = "\0";
     if (!parser.get<std::string>("customparam").empty()){
@@ -326,58 +450,58 @@ int main(int argc, char *argv[]){
         std::getline(CustomizedParamFile, CustomParam);
         if (CustomParam.empty())
             CustomParam = parser.get<std::string>("customparam");
-        Output = "è‡ªå®šä¹‰å‚æ•°: " + CustomParam;
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "×Ô¶¨Òå²ÎÊı: " + CustomParam;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         CustomizedParamFile.close();
         if (Debug)
-            std::cout << "è‡ªå®šä¹‰å‚æ•°: " << CustomParam << std::endl;
+            std::cout << "×Ô¶¨Òå²ÎÊı: " << CustomParam << std::endl;
     }
     if (!parser.get<std::string>("link").empty()){
         LinkFile = parser.get<std::string>("link");
-        Output = "é“¾æ¥æ–‡ä»¶: " + LinkFile;
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "Á´½ÓÎÄ¼ş: " + LinkFile;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "é“¾æ¥æ–‡ä»¶: " << LinkFile << std::endl;
+            std::cout << "Á´½ÓÎÄ¼ş: " << LinkFile << std::endl;
     }
     GUI = parser.exist("GUI");
     // EasyX = parser.exist("EasyX");
 
     CheckSyntax = parser.exist("checksyntax"); 
     DisplayAllWarnings = parser.exist("wall");
-
-    // è·å¾—è¾“å…¥æ–‡ä»¶
+    
+    // »ñµÃÊäÈëÎÄ¼ş
     std::string OutputFile = InputFile.substr(0, InputFile.find(".")) + ".exe\"";
     
-    // æ‹¼æ¥åŸºç¡€å‘½ä»¤
+    // Æ´½Ó»ù´¡ÃüÁî
     if (ResourceName.empty())
         FinalCommandLine = CompilerPath + " " + InputFile + (CustomFile.empty() ? " " : " " + CustomFile + " ") + " -o " + OutputFile + " -std=" + Standard;
     else{
         FinalCommandLine = CompilerPath + " " + InputFile + " " + ResourceName + ".o\"" + (CustomFile.empty() ? " " : " " + CustomFile + " ") + " -o " + OutputFile + " -std=" + Standard + " ";
     }
-    // ä¸åŸºç¡€çš„ (ä¸å¤§é‡ä½¿ç”¨ä¸‰ç›® ä¸ç„¶ä¸å¥½ç»´æŠ¤)
+    // ²»»ù´¡µÄ (²»´óÁ¿Ê¹ÓÃÈıÄ¿ ²»È»²»ºÃÎ¬»¤)
     if (OptimizeLevel != 0){
         FinalCommandLine += " -O" + std::to_string(OptimizeLevel);
     }
     if (CheckSyntax){
         FinalCommandLine += " -fsyntax-only";
-        Output = "åªè¿›è¡Œè¯­æ³•æ£€æŸ¥!";
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "Ö»½øĞĞÓï·¨¼ì²é!";
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "åªè¿›è¡Œè¯­æ³•æ£€æŸ¥å·²å¼€å¯" << std::endl;
+            std::cout << "Ö»½øĞĞÓï·¨¼ì²éÒÑ¿ªÆô" << std::endl;
     }
     if (DisplayAllWarnings){
         FinalCommandLine += " -Wall";
-        Output = "æ˜¾ç¤ºæ‰€æœ‰è­¦å‘Š!";
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "ÏÔÊ¾ËùÓĞ¾¯¸æ!";
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "æ˜¾ç¤ºæ‰€æœ‰è­¦å‘Šå·²å¼€å¯" << std::endl;
+            std::cout << "ÏÔÊ¾ËùÓĞ¾¯¸æÒÑ¿ªÆô" << std::endl;
     }
     if (GUI){
         FinalCommandLine += " -mwindows";
-        Output = "å°†ç¨‹åºæŠŠç¼–è¯‘ä¸º GUI ç¨‹åº!";
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "½«³ÌĞò°Ñ±àÒëÎª GUI ³ÌĞò!";
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "GUIæ¨¡å¼å·²å¼€å¯" << std::endl;
+            std::cout << "GUIÄ£Ê½ÒÑ¿ªÆô" << std::endl;
     }
 
     if (SelfUse){
@@ -390,52 +514,76 @@ int main(int argc, char *argv[]){
 
     if (!LinkFile.empty()){
         FinalCommandLine += " -l" + LinkFile;
-        Output = "é“¾æ¥æ–‡ä»¶: " + LinkFile;
-        WriteLogToFile(INFO, Output.c_str());
+        Output = "Á´½ÓÎÄ¼ş: " + LinkFile;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
         if (Debug)
-            std::cout << "é“¾æ¥æ–‡ä»¶: " << LinkFile << std::endl;
+            std::cout << "Á´½ÓÎÄ¼ş: " << LinkFile << std::endl;
     }
+
+    if (!AdditionalOption.empty()){
+        FinalCommandLine += " " + AdditionalOption;
+        Output = "¸½¼Ó±àÒëÑ¡Ïî: " + AdditionalOption;
+        WriteLogToFile(LogLevel::Info, Output.c_str());
+        if (Debug)
+            std::cout << "¸½¼Ó±àÒëÑ¡Ïî: " << AdditionalOption << std::endl;
+    }
+
     std::cout << "Final Compilation Command Line: " << FinalCommandLine << std::endl;
-    Output = "ç¼–è¯‘å‘½ä»¤: " + FinalCommandLine;
-    WriteLogToFile(INFO, Output.c_str());
-    
+    Output = "±àÒëÃüÁî: " + FinalCommandLine;
+    WriteLogToFile(LogLevel::Info, Output.c_str());
+
     if (!Debug){
-        double StartTime = clock();
+        std::chrono::steady_clock::time_point StartTime = std::chrono::steady_clock::now();
         std::cout << "Compiling..." << std::endl;
-        if (!std::system(FinalCommandLine.c_str())){
+        ConsoleColor::SetColor(ConsoleColor::LightRed, ConsoleColor::Black);
+        int CompileResult = std::system(FinalCommandLine.c_str());
+        ConsoleColor::SetColor(ConsoleColor::White, ConsoleColor::Black);
+        if (!CompileResult){
             std::cout << "Compile Successfully!" << std::endl;
         }
         else{
             std::cout << "Compile Failed!" << std::endl;
         }   
-        double EndTime = clock();
-        std::cout << std::setprecision(4) << "Compile Time: " << (EndTime - StartTime) / 1000.0 << "s" << std::endl;
-        
-        Output = "Compile Time: " + std::to_string((EndTime - StartTime) / 1000.0) + "s";
-        WriteLogToFile(INFO, Output.c_str());
+        std::chrono::steady_clock::time_point EndTime = std::chrono::steady_clock::now();
+        std::chrono::duration<double> Duration = EndTime - StartTime; // µ¥Î»: s
+        std::cout << std::format("Compile Time: {:.4f}s", Duration.count()) << std::endl;
+        Output = std::format("Compile Time: {:.4f}s", Duration.count());
+        WriteLogToFile(LogLevel::Info, Output.c_str());
 
         if (!MediaPath.empty()){
             Output = "Media Path: " + MediaPath;
-            WriteLogToFile(INFO, Output.c_str());
+            WriteLogToFile(LogLevel::Info, Output.c_str());
             std::cout << "Media Path: " << MediaPath << std::endl;
-            auto result = RunSoundA();
-            if (result.first){
+            // auto result = RunSoundA();
+            // if (result.first){
+            //     Output = "Sound Played Successfully!";
+            //     WriteLogToFile(LogLevel::Info, Output.c_str());
+            //     std::cout << "Sound Played Successfully!" << std::endl;
+            // }
+            // else{
+            //     Output = "Sound Played Failed! Error Code: " + std::to_string(result.second);
+            //     WriteLogToFile(LogLevel::Error, Output.c_str());
+            //     std::cout << "Sound Played Failed! Error Code: " << result.second << std::endl;
+            // }
+            std::variant<std::string, bool> result = RunSoundV();
+            if (result.index() == 1){
                 Output = "Sound Played Successfully!";
-                WriteLogToFile(INFO, Output.c_str());
+                WriteLogToFile(LogLevel::Info, Output.c_str());
                 std::cout << "Sound Played Successfully!" << std::endl;
             }
-            else{
-                Output = "Sound Played Failed! Error Code: " + std::to_string(result.second);
-                WriteLogToFile(ERROR, Output.c_str());
-                std::cout << "Sound Played Failed! Error Code: " << result.second << std::endl;
+            else{ // index = 0, std::string -> Error
+                Output = "Sound Played Failed! Error Info: " + std::get<std::string>(result);
+                WriteLogToFile(LogLevel::Error, Output.c_str());
+                std::cout << "Sound Played Failed! Error Info: " << std::get<std::string>(result) << std::endl;
             }
         }
     }
 
     Output = "--------------- Stoped! ---------------";
-    WriteLogToFile(INFO, Output.c_str());
+    WriteLogToFile(LogLevel::Info, Output.c_str());
 
     OutputLog.close();
+    ReadOptions.close();
 
     return 0;
 }
@@ -459,5 +607,5 @@ int main(int argc, char *argv[]){
 ======`-.____`-.___\_____/___.-`____.-'======
                    `=---='
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ä½›ç¥–ä¿ä½‘       æ°¸ä¸å®•æœº     æ°¸æ— BUG
+    ·ğ×æ±£ÓÓ       ÓÀ²»å´»ú     ÓÀÎŞBUG
 */
