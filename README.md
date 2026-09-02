@@ -1,87 +1,34 @@
 # Compile Script Maker
 
-## Release Version 1.2.1
+## Release Version 1.2.1.1
 
-### zh-cn
+`GCC` Compile Script Maker
 
-这是一个可以生成编译脚本的程序
+这是一个命令行程序, 它可以根据你的输入提供对应的编译脚本
 
-是一个控制台程序，所以需要先运行 `cmd.exe` 或者 `powershell.exe` 再运行
+支持使用 `options.txt` 进行配置
 
-如果是 `Mingw g++` 编译器的话可以使用，`MSVC` 建议使用 `Visual Studio`
+目前支持的配置有 (不区分大小写)
 
-必须要配置 `options.txt`！！！
+`CompilerPath` -> `gcc 编译器地址` **需要是字符串**
 
-下面有 `options.txt` 的样例
+`WindresPath` -> `windres (编译资源文件) 编译器地址` **需要是字符串**
 
-更多内容请输入 `Compiler.exe -h` 来查看
+`RunSound` -> `是否在编译完成后播放 MediaPath 中的提示音` **bool 类型, true 或 false**
 
-日志会输出到 `log.txt` 中
+`MediaPath` -> `在 RunSound 为 true 的情况下, 编译完成后播放的提示音` **字符串**
 
-如果你不想编译的话 `Release` 中有编译好的，我将它打包成了 7z 的自解压程序
+`AutoCurrectSyntax` -> `在 .cpp 后缀未检测到时进行后缀的自动修正` **true or false**
 
-~~说真的应该用在oi上好吧awa~~
+`AdditionalOption` -> `编译时额外添加的编译项, 这里写的会在每一次编译时都带上` **字符串, Eg. -ntdll**
 
-### en-us
+可以在 `Output-cmdline.log` 中看到本程序的日志
 
-~~Translated by myself~~
+不知道怎么写的话可以使用 `Compiler.exe --help` 查看相关选项
 
-**It is A Compile Script Maker**
+#### Update. 2026.9.2
+1. 代码结构优化, 使用了更多现代 C++ 特性
 
-**It is a Console Application, so you have to run cmd.exe or powershell.exe firstly!**
+2. 新加了 `--config` 参数, 使用后可以打开程序读取的配置文件 `options.txt`
 
-It can help you spawn compile script if you use `Mingw g++`
-
-You have to configure `options.txt`
-
-For example:
-
-```
-WindresPath=D:\\Mingw64\\bin\\Windres.exe # % Your Windres Path Here %
-CompilerPath=D:\\Mingw64\\bin\\g++.exe # % Your g++ Compiler Path Here %
-RunSound=true # true or false
-AutoCurrectSyntax=true # true or false
-MediaPath=% Your Voice File Path %
-```
-
-Replace the content behind `=` with your own path
-
-------------
-
-Here are some instances:
-
-**1.**
-
-**`Compiler.exe -f TestFile.cpp -s 14 -o 2 -l -h -w -a -n -e -d`**
-
-**`= g++ TestFile.cpp -o2 -o TestFile.exe -std=c++14 -leasyx -mwindows -Wall -lshlwapi -lwinmm -lole32 -lgdi32`**
-
-**2.**
-
-**`Compiler.exe -f TestFile.cpp -c`**
-
-**`= g++ TestFile.cpp -o TestFile.exe -fsyntax-only`**
-
-**3.**
-
-**`3.  Compiler.exe -f TestFile.cpp -r resource.rc`**
-
-**`= windres resource.rc -O coff resource.o && g++ TestFile.cpp resource.o -o TestFile.exe`**
-
-```
-// Instance 4 means that you can use your own header files
-```
-
-**`4.  Compiler.exe -f TestFile.cpp -i Oxygen.cpp`**
-
-**`= g++ TestFile.cpp Oxygen.cpp -o TestFile.exe`**
-
-**`5. Compiler.exe -h`**
-
-------------
-
-You can see more information in `log.txt`
-
-You can download executive files in `Releases`
-
-It is a 7-Zip Self Extracter.
+<!-- 嗯对我是笨蛋 -->
