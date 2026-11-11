@@ -5,19 +5,21 @@
 
 # Binary Files
 Binary/
+*.exe
 
 # Resource Files
 Icons/
 resource/
 *.o
 *.wav
+*.log
 
 # Optimize From AI
 optimize.md
 
 # Abandoned Source Code Files
 Compiler-x86.cpp
-Compiler.exe
+Compiler.cpp
 Compiler_Cmdline_Backup.cpp
 Cmdline_Backup_1.2.1.1.cpp
 Compiler-NoExtraDlls.cpp
