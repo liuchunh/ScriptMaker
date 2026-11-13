@@ -531,6 +531,7 @@ int main(int argc, char *argv[]){
     std::cout << "Final Compilation Command Line: " << FinalCommandLine << std::endl;
     Output = "±àÒëÃüÁî: " + FinalCommandLine;
     WriteLogToFile(LogLevel::Info, Output.c_str());
+    int ReturnCode = 0;
 
     if (!Debug){
         std::chrono::steady_clock::time_point StartTime = std::chrono::steady_clock::now();
@@ -543,6 +544,7 @@ int main(int argc, char *argv[]){
         }
         else{
             std::cout << "Compile Failed!" << std::endl;
+            ReturnCode = 1;
         }   
         std::chrono::steady_clock::time_point EndTime = std::chrono::steady_clock::now();
         std::chrono::duration<double> Duration = EndTime - StartTime; // µ¥Î»: s
@@ -585,7 +587,7 @@ int main(int argc, char *argv[]){
     OutputLog.close();
     ReadOptions.close();
 
-    return 0;
+    return ReturnCode;
 }
 /*
                    _ooOoo_

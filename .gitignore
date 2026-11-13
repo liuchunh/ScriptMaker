@@ -13,9 +13,14 @@ resource/
 *.o
 *.wav
 *.log
+*.txt
+*.cfg
 
 # Optimize From AI
 optimize.md
+
+# Function Test Folder
+Test/*.exe
 
 # Abandoned Source Code Files
 Compiler-x86.cpp
